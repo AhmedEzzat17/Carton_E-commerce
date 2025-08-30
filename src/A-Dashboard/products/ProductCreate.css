@@ -1,0 +1,462 @@
+/* ProductCreate.css */
+
+/* تنسيق حاوية الصور */
+.image-container {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease-in-out;
+  display: inline-block;
+  margin: 12px;
+  border: 2px solid transparent;
+}
+
+.image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: all 0.3s ease-in-out;
+}
+
+.image-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+  border-color: #007bff;
+}
+
+.image-container:hover img {
+  opacity: 0.6;
+}
+
+/* أيقونة الحذف للصور */
+.image-container .delete-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.image-container:hover .delete-icon {
+  opacity: 1;
+}
+
+.delete-icon i {
+  font-size: 18px;
+  color: white;
+  transition: color 0.2s ease-in-out;
+}
+
+.delete-icon:hover i {
+  color: red;
+}
+
+/* تنسيق زر حذف قيمة المتغير */
+.removeValue {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  margin-right: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  transition: all 0.3s ease-in-out;
+}
+
+.removeValue:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ff4d4d;
+}
+
+/* تنسيق قائمة قيم المتغيرات */
+.variantValuesList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+  max-width: 100%;
+}
+
+.variantValuesList .badge {
+  background-color: #007bff;
+  color: #fff;
+  font-size: 14px;
+  padding: 8px 15px;
+}
+
+.variantValuesList .badge:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* تنسيق بطاقة قيمة المتغير */
+.variant-value-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  display: inline-block;
+  margin-right: 6px;
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.variant-value-card:hover {
+  border-color: #007bff;
+  box-shadow: 0 2px 6px rgba(0, 123, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+/* تنسيق محتوى القيمة */
+.value-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.value-name {
+  font-weight: 600;
+  font-size: 12px;
+  color: #007bff;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.remove-value-btn {
+  background: linear-gradient(45deg, #dc3545, #c82333);
+  border: none;
+  color: white;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 2px rgba(220, 53, 69, 0.3);
+  font-size: 8px;
+  flex-shrink: 0;
+}
+
+.remove-value-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.4);
+}
+
+/* تنسيق محدد اللون */
+.color-picker {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #dee2e6;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: none;
+  flex-shrink: 0;
+}
+
+.color-picker:hover {
+  border-color: #007bff;
+  transform: scale(1.05);
+}
+
+.color-picker::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.color-picker::-webkit-color-swatch {
+  border: none;
+  border-radius: 2px;
+}
+
+/* تحسين عرض البطاقات للأجهزة الصغيرة */
+@media (max-width: 768px) {
+  .variantValuesList {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  }
+
+  .variant-value-card {
+    width: 100px;
+    padding: 4px 6px;
+  }
+
+  .value-name {
+    font-size: 11px;
+  }
+
+  .color-picker {
+    width: 18px;
+    height: 18px;
+  }
+
+  .remove-value-btn {
+    width: 14px;
+    height: 14px;
+    font-size: 7px;
+  }
+}
+
+/* تنسيق زر التبديل (سويتش) */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #ddd;
+  transition: 0.4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  transition: 0.4s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+input:checked + .slider {
+  background: linear-gradient(45deg, #6a11cb, #2575fc);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196f3;
+}
+
+input:checked + .slider:before {
+  transform: translateX(24px);
+}
+
+/* تنسيق حاوية البحث */
+.container-fluid .search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 18px;
+  padding: 3px;
+  margin: 10px 0px;
+  background: white;
+  cursor: pointer;
+}
+
+.container-fluid .search-container input {
+  border: none;
+  outline: none;
+  flex: 1;
+  padding: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.container-fluid .search-container .icon {
+  padding: 8px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #555;
+}
+
+/* تنسيق القائمة المنسدلة للفئات */
+.category-dropdown {
+  position: absolute;
+  right: 1px;
+  top: 85%;
+  width: 99%;
+  background: white;
+  border: 1px solid #ddd;
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 1050;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-top: 5px;
+}
+
+.category-dropdown div {
+  padding: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #ddd;
+  transition: background 0.2s ease-in-out;
+}
+
+.category-dropdown div:hover {
+  background-color: #f1f1f1;
+}
+
+/* تنسيق أقسام الصفحة */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background: #f8f9fa;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.section-header:hover {
+  background: #e9ecef;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.section-header h5 {
+  margin: 0;
+  font-weight: 600;
+  color: #343a40;
+}
+
+.section-content {
+  padding: 15px;
+  border: 1px solid #e9ecef;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.section-content:hover {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* تنسيق قسم التسعير */
+.pricing-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: space-between;
+}
+
+.pricing-row .col-md-4 {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* تنسيق السلة عند المرور عليها */
+.cart-icon:hover {
+  color: #ff0000 !important;
+  transform: scale(1.1);
+  transition: all 0.3s ease;
+}
+
+/* تنسيق مودال اختيار الصور */
+.image-modal .modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 15px;
+  padding: 15px;
+}
+
+.image-item {
+  position: relative;
+  height: 150px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.image-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-item.selected {
+  border: 3px solid #007bff;
+}
+
+.image-item.selected:before {
+  content: "✓";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: #007bff;
+  color: white;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.image-item:hover {
+  transform: scale(1.05);
+}
+
+/* تحسينات للأجهزة الصغيرة */
+@media (max-width: 768px) {
+  .image-container {
+    width: 100px;
+    height: 100px;
+  }
+
+  .variantValuesList .badge {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+  }
+
+  .image-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+
+  .image-item {
+    height: 120px;
+  }
+}
