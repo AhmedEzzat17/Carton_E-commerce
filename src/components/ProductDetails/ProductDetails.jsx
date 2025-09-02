@@ -3,10 +3,28 @@ import "../../assets/css/product.css";
 import { CartWishlistContext } from "../../App";
 import { useNavigate } from "react-router-dom";
 
+// Style for input fields
+const inputStyle = {
+  width: "100%",
+  padding: "8px 12px",
+  borderRadius: "6px",
+  border: "1px solid #ddd",
+  fontSize: "14px",
+  boxShadow: "inset 0 1px 3px rgba(0,0,0,0.1)",
+  marginBottom: "10px"
+};
+
 export default function ProductDetails({ product }) {
   const [mainImage, setMainImage] = useState("");
   const [note, setNote] = useState("");
   const [noteError, setNoteError] = useState("");
+  const [dimensions, setDimensions] = useState({
+    length: "",
+    width: "",
+    height: "",
+    size: ""
+  });
+  const [selectedFile, setSelectedFile] = useState(null);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const { cartItems, addToCart, removeFromCart, addToWishlist } =
     useContext(CartWishlistContext);
@@ -190,7 +208,7 @@ export default function ProductDetails({ product }) {
                 style={{
                   marginTop: "10px",
                   direction: "rtl",
-                  fontSize: "16px",
+                  fontSize: "21px",
                   cursor: "pointer",
                   textDecoration: "underline",
                   textAlign: "center",
@@ -203,8 +221,7 @@ export default function ProductDetails({ product }) {
                   if (modal) modal.style.display = "flex";
                 }}
               >
-                إضغط هنا حتى يمكنك كتابة ملاحظة للبائع تخص الطلب، مثل نوع تريد
-                تذكيره به، طلب معين، طريقة التوصيل.
+                إضغط هنا حتى يمكنك كتابة طلب خاص للبائع تخص الطلب.
               </div>
             ) : (
               <div
@@ -212,15 +229,15 @@ export default function ProductDetails({ product }) {
                   marginTop: "10px",
                   background: "#fa0f0fff",
                   color: "#fff",
-                  padding: "10px",
+                  padding: "15px 25px",
                   borderRadius: "6px",
                   textAlign: "center",
                   fontWeight: "bold",
-                  fontSize: "16px",
+                  fontSize: "21px",
                   boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
                 }}
               >
-                لإضافه ملاحظه للبائع تخص الطلب، مثل نوع تريد تذكيره به، طلب معين، طريقة التوصيل،أضف المنتج إلى السلة أولاً
+                لإضافه طلب خاص للبائع تخص الطلب،أضف المنتج إلى السلة أولاً
               </div>
             )}
           </div>
@@ -327,11 +344,11 @@ export default function ProductDetails({ product }) {
             onClick={(e) => e.stopPropagation()} // يمنع إغلاق النافذة عند الضغط بداخلها
             style={{
               background: "#fff",
-              padding: "30px 20px",
+              padding: "25px",
               borderRadius: "12px",
               width: "90%",
-              maxWidth: "400px",
-              boxShadow: "0 0 15px rgba(0,0,0,0.3)",
+              maxWidth: "550px",
+              boxShadow: "0 5px 25px rgba(0,0,0,0.15)",
               textAlign: "right",
               position: "relative",
               animation: "fadeInUp 0.3s ease-in-out",
@@ -358,27 +375,93 @@ export default function ProductDetails({ product }) {
               <i className="fa-solid fa-xmark"></i>
             </button>
 
-            <h3 style={{ marginBottom: "15px" }}>أضف ملاحظتك</h3>
-            <textarea
-              placeholder="أضف ملاحظتك هنا"
-              rows="5"
-              value={note}
-              onChange={(e) => {
-                setNote(e.target.value);
-                if (e.target.value.trim().length >= 5) {
-                  setNoteError("");
-                }
-              }}
-              style={{
-                width: "100%",
-                borderRadius: "8px",
-                border: `1px solid ${noteError ? "red" : "#ccc"}`,
-                padding: "10px",
-                fontFamily: "inherit",
-                fontSize: "15px",
-                resize: "none",
-              }}
-            ></textarea>
+            <h3 style={{ marginBottom: "20px", textAlign: "center" }}>طلب خاص</h3>
+            
+            <div style={{ marginBottom: "15px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", padding: "15px", borderRadius: "8px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "15px" }}>
+                <div>
+                  <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>الطول (سم)</label>
+                  <input
+                    type="number"
+                    value={dimensions.length}
+                    onChange={(e) => setDimensions({...dimensions, length: e.target.value})}
+                    style={inputStyle}
+                    placeholder="أدخل الطول"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>العرض (سم)</label>
+                  <input
+                    type="number"
+                    value={dimensions.width}
+                    onChange={(e) => setDimensions({...dimensions, width: e.target.value})}
+                    style={inputStyle}
+                    placeholder="أدخل العرض"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>الارتفاع (سم)</label>
+                  <input
+                    type="number"
+                    value={dimensions.height}
+                    onChange={(e) => setDimensions({...dimensions, height: e.target.value})}
+                    style={inputStyle}
+                    placeholder="أدخل الارتفاع"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>المقاس</label>
+                  <input
+                    type="text"
+                    value={dimensions.size}
+                    onChange={(e) => setDimensions({...dimensions, size: e.target.value})}
+                    style={inputStyle}
+                    placeholder="أدخل المقاس"
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: "15px" }}>
+                <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>المرفقات</label>
+                <div className="img-pdf" style={{ border: "1px dashed #ccc", padding: "10px", borderRadius: "6px", textAlign: "center", transition: "all 0.3s" }}>
+                  <input
+                    type="file"
+                    id="file-upload"
+                    style={{ display: "none" }}
+                    onChange={(e) => setSelectedFile(e.target.files[0])}
+                  />
+                  <label htmlFor="file-upload" style={{ cursor: "pointer" }}>
+                    <i className="fa-solid fa-upload" style={{ marginLeft: "5px" }}></i>
+                    {selectedFile ? selectedFile.name : "رفع ملف (PDF أو صورة)"}
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>ملاحظات إضافية</label>
+                <textarea
+                  placeholder="أضف ملاحظاتك هنا"
+                  rows="4"
+                  value={note}
+                  onChange={(e) => {
+                    setNote(e.target.value);
+                    if (e.target.value.trim().length >= 5) {
+                      setNoteError("");
+                    }
+                  }}
+                  style={{
+                    width: "100%",
+                    borderRadius: "6px",
+                    border: `1px solid ${noteError ? "red" : "#ddd"}`,
+                    padding: "10px",
+                    fontFamily: "inherit",
+                    fontSize: "14px",
+                    resize: "none",
+                    boxShadow: "inset 0 1px 3px rgba(0,0,0,0.1)"
+                  }}
+                ></textarea>
+              </div>
+            </div>
             {noteError && (
               <p style={{ color: "red", marginTop: "5px", fontSize: "14px" }}>
                 {noteError}

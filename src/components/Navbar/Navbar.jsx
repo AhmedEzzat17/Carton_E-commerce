@@ -9,6 +9,9 @@ import Register from "../Auth/Register";
 import { CartWishlistContext } from "../../App";
 
 const Navbar = () => {
+  // Refs
+  const dropdownRef = useRef(null);
+  const buttonRef = useRef(null);
   const [showSearchPopup, setShowSearchPopup] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -34,6 +37,7 @@ const Navbar = () => {
           withAuth: false,
           params: { type: "categories" },
         });
+        console.log("API Response:", res.data);
         if (res.data?.status && Array.isArray(res.data.data?.data)) {
           setCategories(res.data.data.data);
         } else {
@@ -142,10 +146,46 @@ const Navbar = () => {
     setShowSearchPopup(true);
   };
 
+  // إغلاق القائمة المنسدلة عند النقر في أي مكان بالصفحة
+  useEffect(() => {
+    const handleClickAnywhere = (event) => {
+      const menu = document.querySelector('.user-dropdown-custom');
+      const button = document.getElementById('userDropdown');
+      
+      // إذا كان النقر خارج القائمة وخارج الزر
+      if (menu && button && 
+          !menu.contains(event.target) && 
+          !button.contains(event.target)) {
+        menu.classList.remove('show');
+      }
+    };
+
+    // إضافة مستمع الأحداث للصفحة كاملة
+    document.addEventListener('click', handleClickAnywhere);
+    
+    // تنظيف مستمع الأحداث عند إلغاء التثبيت
+    return () => {
+      document.removeEventListener('click', handleClickAnywhere);
+    };
+  }, []);
+
   const handleLoginClick = (e) => {
     e.preventDefault();
     setShowLoginModal(true);
   };
+
+  // Add event listener for logout from other components
+  React.useEffect(() => {
+    const handleShowLogoutModal = () => {
+      setShowLogoutModal(true);
+    };
+
+    document.addEventListener('showLogoutModal', handleShowLogoutModal);
+    
+    return () => {
+      document.removeEventListener('showLogoutModal', handleShowLogoutModal);
+    };
+  }, []);
 
   // دالة إغلاق القائمة الجانبية
   const closeSidebar = () => {
@@ -758,33 +798,74 @@ const Navbar = () => {
                     </Dropdown>
 
                     {/* user */}
-                    <li className="pe-1 logn">
+                    <li className="pe-1 logn" style={{ position: 'relative' }}>
                       {isLoggedIn ? (
-                        <Link
-                          href="#"
-                          onClick={handleLogoutClick}
-                          // className="logout-link"
-                          aria-label="Log out"
-                          // onClick={confirmLogout}
-                          className="bg-danger"
-                        >
-                          <span>
-                            تسجيل خروج
-                            <i
-                              className="bx bx-log-out me-1"
-                              style={{ fontSize: "20px", marginRight: "5px" }}
-                            ></i>
-                          </span>
-                        </Link>
+                        <div className="user-profile-container">
+                          <button
+                            ref={buttonRef}
+                            className="user-profile-btn-custom"
+                            id="userDropdown"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              const menu = document.querySelector('.user-dropdown-custom');
+                              menu.classList.toggle('show');
+                            }}
+                            aria-expanded="false"
+                          >
+                            <span>مرحباً</span>
+                            <span className="user-profile-name">
+                              {(() => {
+                                try {
+                                  const userData = JSON.parse(localStorage.getItem('user'));
+                                  const userName = userData?.user?.name || 'المستخدم';
+                                  return userName.split(' ')[0].length <= 10
+                                    ? userName.split(' ')[0]
+                                    : `${userName.substring(0, 10)}...`;
+                                } catch {
+                                  return 'المستخدم';
+                                }
+                              })()}
+                            </span>
+                            <i className="bx bx-user"></i>
+                          </button>
+                          <div ref={dropdownRef} className="user-dropdown-custom" id="userDropdownMenu">
+                            <div className="user-dropdown-header">
+                              <i className="bx bx-user ms-2"></i>
+                              <span>
+                                {(() => {
+                                  try {
+                                    const userData = JSON.parse(localStorage.getItem('user'));
+                                    return userData?.user?.name || 'المستخدم';
+                                  } catch {
+                                    return 'المستخدم';
+                                  }
+                                })()}
+                              </span>
+                            </div>
+                            <div className="user-dropdown-divider"></div>
+                            <Link className="user-dropdown-item" to="/Profile" onClick={() => window.scrollTo(0, 0)}>
+                              <i className="bx bx-user"></i> الملف الشخصي
+                            </Link>
+                            {/* <Link className="user-dropdown-item" to="/orders">
+                              <i className="bx bx-package"></i> طلباتي
+                            </Link>
+                            <Link className="user-dropdown-item" to="/wishlist">
+                              <i className="bx bx-heart"></i> قائمة الرغبات
+                            </Link> */}
+                            <div className="user-dropdown-divider"></div>
+                            <button 
+                              className="user-dropdown-item text-danger"
+                              onClick={handleLogoutClick}
+                            >
+                              <i className="bx bx-log-out"></i> تسجيل خروج
+                            </button>
+                          </div>
+                        </div>
                       ) : (
-                        <a href="#" onClick={handleLoginClick}>
-                          <span>
-                            تسجيل دخول
-                            <i
-                              className="bx bx-user me-1"
-                              style={{ fontSize: "20px" }}
-                            ></i>
-                          </span>
+                        <a href="#" onClick={handleLoginClick} className="login-btn-custom">
+                          <span>تسجيل دخول</span>
+                          <i className="bx bx-user"></i>
                         </a>
                       )}
                     </li>
@@ -800,11 +881,33 @@ const Navbar = () => {
             {/* user icon - shows when not scrolled */}
             {!isScrolled && (
               <li className="pe-1 logn user-icon-normal">
-                <a href="#" onClick={handleLoginClick}>
-                  <span>
-                    <i className="bx bx-user" style={{ fontSize: "25px" }}></i>
-                  </span>
-                </a>
+                {isLoggedIn ? (
+                  <Dropdown className="user-dropdown-nav" align="end">
+                    <Dropdown.Toggle as="a" href="#" className="p-0" style={{background: 'none', border: 'none'}}>
+                      <span>
+                        <i className="bx bx-user" style={{ fontSize: "25px" }}></i>
+                      </span>
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu className="user-dropdown-menu">
+                      <Dropdown.Item as={Link} to="/Profile" onClick={() => window.scrollTo(0, 0)}>
+                        <i className="bx bx-user me-2"></i> الملف الشخصي
+                      </Dropdown.Item>
+                      <Dropdown.Divider />
+                      <Dropdown.Item onClick={(e) => {
+                        e.preventDefault();
+                        setShowLogoutModal(true);
+                      }} className="text-danger">
+                        <i className="bx bx-log-out me-2"></i> تسجيل الخروج
+                      </Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                ) : (
+                  <a href="#" onClick={handleLoginClick}>
+                    <span>
+                      <i className="bx bx-user" style={{ fontSize: "25px" }}></i>
+                    </span>
+                  </a>
+                )}
               </li>
             )}
 

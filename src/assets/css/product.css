@@ -1560,6 +1560,10 @@ input[type="number"]::-webkit-inner-spin-button {
     transform: translateX(0);
   }
 }
+.img-pdf:hover{
+  background-color: var(--accent-color);
+  color: var(--white-color);
+}
 
 /* .scroll-container {
   scrollbar-width: none;

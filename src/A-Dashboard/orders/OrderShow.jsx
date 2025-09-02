@@ -276,75 +276,73 @@ const OrderShow = () => {
         </div>
       </div>
 
-      {/* Orders Table */}
-      <div className="orders-table-container">
-        <div className="table-header">
-          <h3>قائمة الطلبات</h3>
-          <span className="orders-count">({(orders || []).length} طلب)</span>
-        </div>
+{/* Orders Table */}
+<div className="orders-table-container1">
+  <div className="table-header1">
+    <h3>قائمة الطلبات</h3>
+    <span className="orders-count">({(orders || []).length} طلب)</span>
+  </div>
 
-        {(orders || []).length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">
-              <i className="bx bx-shopping-bag"></i>
-            </div>
-            <h3>لا توجد طلبات</h3>
-            <p>لم يتم العثور على أي طلبات تطابق معايير البحث</p>
-          </div>
-        ) : (
-          <div className="table-responsive">
-            <table className="orders-table">
-              <thead>
-                <tr>
-                  <th>رقم الطلب</th>
-                  <th>التاريخ</th>
-                  <th>المبلغ الإجمالي</th>
-                  <th>الحالة</th>
-                  <th colSpan={2}>الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(orders || []).map((order) => (
-                  <tr key={order.id} className="order-row">
-                   
-                    <td className="order-number">
-                      <span className="order-ref">{order.order_number}</span>
-                    </td>
-                   
-                    <td className="order-date">
-                      {formatDate(order.created_at)}
-                    </td>
-                    <td className="order-total">
-                      <span className="total-amount">
-                        {formatPrice(order.total_amount)}
-                      </span>
-                    </td>
-                    <td className="order-status">
-                      <span
-                        className={`status-badge ${getStatusBadgeClass(
-                          order.status
-                        )}`}
-                      >
-                        {getStatusText(order.status)}
-                      </span>
-                    </td>
-                    <td className="order-actions">
-                      <Link
-                        to={`/Dashboard/orders/${order.id}`}
-                        className="action-btn details-btn"
-                        title="عرض التفاصيل"
-                      >
-                        <i className="bx bx-show"></i>
-                        تفاصيل
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+  {(orders || []).length === 0 ? (
+    <div className="empty-state">
+      <div className="empty-icon">
+        <i className="bx bx-shopping-bag"></i>
       </div>
+      <h3>لا توجد طلبات</h3>
+      <p>لم يتم العثور على أي طلبات تطابق معايير البحث</p>
+    </div>
+  ) : (
+    <div className="table-responsive">
+      <table className="orders-table">
+        <thead>
+          <tr>
+            <th>رقم الطلب</th>
+            <th>التاريخ</th>
+            <th>المبلغ الإجمالي</th>
+            <th>الحالة</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {(orders || []).map((order) => (
+            <tr key={order.id} className="order-row1">
+              <td className="order-number">
+                <span className="order-ref">{order.order_number}</span>
+              </td>
+
+              <td className="order-date">
+                {formatDate(order.created_at)}
+              </td>
+
+              <td className="order-total">
+                <span className="total-amount">
+                  {formatPrice(order.total_amount)}
+                </span>
+              </td>
+
+              <td className="order-status">
+                <span className={`status-badge ${getStatusBadgeClass(order.status)}`}>
+                  {getStatusText(order.status)}
+                </span>
+              </td>
+
+              <td className="order-actions">
+                <Link
+                  to={`/Dashboard/orders/${order.id}`}
+                  className="action-btn details-btn"
+                  title="عرض التفاصيل"
+                >
+                  <i className="bx bx-show"></i>
+                  تفاصيل
+                </Link>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
 
       {/* Pagination */}
       {totalPages > 1 && (

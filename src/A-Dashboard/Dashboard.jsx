@@ -144,7 +144,7 @@ function Dashboard() {
         <ul className="side-menu scroll-hidden">
           <li>
             <Link
-              to="/orders"
+              to="/Dashboard/orders"
               onClick={(e) => handleMenuItemClick(e, "home")}
               className={`menu-item ${
                 activeMenuItem === "home" ? "active" : ""

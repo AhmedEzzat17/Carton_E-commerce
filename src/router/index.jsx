@@ -20,6 +20,7 @@ import OrderDetails from "../A-Dashboard/orders/OrderDetails";
 import PaymentmMethod from "../pages/PaymentmMethod";
 import PrivateRoute from "./PrivateRoute";
 import ErrorPage from "../pages/ErrorPage";
+import Profile from "../pages/profile";
 const Dashboard = lazy(() => import("../A-Dashboard/Dashboard"));
 
 const AppRoutes = () => (
@@ -34,6 +35,7 @@ const AppRoutes = () => (
     <Route path="/category/:id" element={<CategoryProductsPage />} />
     <Route path="/ShoppingCartSection" element={<ShoppingCartSection />} />
     <Route path="/WishListSection" element={<WishListSection />} />
+    <Route path="/Profile" element={<Profile />} />
     {/* <Route path="/PaymentmMethod" element={<PaymentmMethod />} /> */}
     {/* صفحة الدفع لازم تسجيل دخول */}
     <Route element={<PrivateRoute />}>
