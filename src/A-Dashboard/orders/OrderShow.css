@@ -429,7 +429,7 @@
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
-.order-number .order-ref {
+.order-number1 .order-ref {
   background: linear-gradient(135deg, #10b981, #059669);
   color: white;
   padding: 6px 12px;
@@ -458,19 +458,19 @@
   font-size: 0.875rem;
 }
 
-.order-date {
+.order-date1 {
   color: #64748b;
   font-size: 0.9rem;
 }
 
-.total-amount {
+.total-amount1 {
   font-weight: 700;
   color: #059669;
   font-size: 1.1rem;
 }
 
 /* Status Badges */
-.status-badge {
+.status-badge1 {
   padding: 8px 16px;
   border-radius: 20px;
   font-size: 0.8rem;
@@ -511,7 +511,7 @@
 }
 
 /* Action Buttons */
-.action-btn {
+.action-btn1 {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -525,12 +525,12 @@
   cursor: pointer;
 }
 
-.details-btn {
+.details-btn1 {
   background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: white;
 }
 
-.details-btn:hover {
+.details-btn1:hover {
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
@@ -898,7 +898,7 @@
     font-size: 0.8rem;
   }
 
-  .action-btn {
+  .action-btn1 {
     padding: 8px 12px;
     font-size: 0.8rem;
   }
@@ -1011,17 +1011,17 @@
     font-size: 0.75rem;
   }
 
-  .total-amount {
+  .total-amount1 {
     font-size: 1rem;
   }
 
-  .status-badge {
+  .status-badge1 {
     padding: 6px 12px;
     font-size: 0.75rem;
     min-width: 80px;
   }
 
-  .action-btn {
+  .action-btn1 {
     padding: 6px 10px;
     font-size: 0.75rem;
   }
@@ -1132,17 +1132,17 @@
     font-size: 0.7rem;
   }
 
-  .total-amount {
+  .total-amount1 {
     font-size: 0.9rem;
   }
 
-  .status-badge {
+  .status-badge1 {
     padding: 4px 8px;
     font-size: 0.7rem;
     min-width: 70px;
   }
 
-  .action-btn {
+  .action-btn1 {
     padding: 4px 8px;
     font-size: 0.7rem;
   }

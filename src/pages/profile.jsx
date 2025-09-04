@@ -1,585 +1,594 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-    FaUser, FaPhone, FaEnvelope, FaEdit,
-    FaMapMarkerAlt, FaPlus, FaBox, FaHistory,
-    FaTruck, FaCheckCircle, FaTimesCircle, FaClock,
-    FaTrash, FaArrowLeft, FaCheck
+  FaUser,
+  FaPhone,
+  FaEnvelope,
+  FaEdit,
+  FaMapMarkerAlt,
+  FaPlus,
+  FaBox,
+  FaTruck,
+  FaCheck,
+  FaTrash,
+  FaSpinner,
+  FaCheckCircle
 } from 'react-icons/fa';
 
+// NOTE: This component focuses on logic fixes requested by the user:
+// - Replace native alert() calls with an in-app toast message (green top-left).
+// - Make addresses add/update/delete work reliably even when API fails by falling back to localStorage.
+// - Fix bugs in string/template usage for headers and classNames.
+// - Keep the UI structure the same but don't change styling (user said "no design").
+
 const Profile = () => {
-    // User data state
-    const [userData, setUserData] = useState({
-        name: 'أحمد محمد',
-        phone: '+201234567890',
-        email: 'ahmed@example.com',
-        isEditing: false
-    });
+  // Loading states
+  const [loading, setLoading] = useState({ profile: false, addresses: false, orders: false });
 
-    // Addresses state
-    const [addresses, setAddresses] = useState([
-        {
-            id: 1,
-            title: 'المنزل',
-            details: '123 شارع التحرير، القاهرة، مصر',
-            isDefault: true
-        },
-        {
-            id: 2,
-            title: 'العمل',
-            details: '456 شارع جامعة الدول العربية، المهندسين، الجيزة',
-            isDefault: false
-        }
-    ]);
+  // Toast message state (top-left, green for success)
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
 
-    // New address form state
-    const [newAddress, setNewAddress] = useState({
-        title: '',
-        details: '',
-        isDefault: false
-    });
-    const [showAddressForm, setShowAddressForm] = useState(false);
-    const [editingAddressId, setEditingAddressId] = useState(null);
+  // Get user data from localStorage safely
+  const getUserData = () => {
+    try {
+      const userData = JSON.parse(localStorage.getItem('user'));
+      return userData?.user || {};
+    } catch (err) {
+      return {};
+    }
+  };
 
-    // Orders state
-    const [orders, setOrders] = useState([
-        {
-            id: 'ORD-2023-001',
-            date: '2023-10-15',
-            status: 'تم التوصيل',
-            total: 1250,
-            items: [
-                { name: 'حذاء رياضي', price: 500, quantity: 1 },
-                { name: 'تيشيرت', price: 250, quantity: 3 }
-            ],
-            tracking: 'TRK123456789',
-            showDetails: false
-        },
-        {
-            id: 'ORD-2023-002',
-            date: '2023-10-10',
-            status: 'جارٍ التوصيل',
-            total: 750,
-            items: [
-                { name: 'بنطلون جينز', price: 750, quantity: 1 }
-            ],
-            tracking: 'TRK987654321',
-            showDetails: false
-        }
-    ]);
+  // User data state - initialized from localStorage
+  const [userData, setUserData] = useState(() => {
+    const user = getUserData();
+    return { name: user.name || '', phone: user.phone || '', phone2: user.phone2 || '', email: user.email || '', isEditing: false };
+  });
 
-    // Form handlers
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setUserData(prev => ({ ...prev, [name]: value }));
-    };
+  // Addresses state
+  const [addresses, setAddresses] = useState([]);
+  // New address form state
+  const [newAddress, setNewAddress] = useState({ title: '', details: '', isDefault: false });
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [editingAddressId, setEditingAddressId] = useState(null);
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        setUserData(prev => ({ ...prev, isEditing: false }));
-        // Here you would typically update the user data in your backend
-        console.log('User data updated:', userData);
-    };
+  // Orders state
+  const [orders, setOrders] = useState([]);
 
-    // Address handlers
-    const handleAddressInputChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setNewAddress(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }));
-    };
+  // Tabs state
+  const [activeTab, setActiveTab] = useState('profile');
 
-    const handleAddAddress = (e) => {
-        e.preventDefault();
+  // API Base URL - adjust this to your actual API
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://myappapi.fikriti.com/api/v1/';
+
+  // Get auth token
+  const getAuthToken = () => {
+    try {
+      const userData = JSON.parse(localStorage.getItem('user'));
+      return userData?.token || '';
+    } catch {
+      return '';
+    }
+  };
+
+  // API headers
+  const getHeaders = () => ({
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${getAuthToken()}`
+  });
+
+  // Utility: show toast
+  const showToast = (message, type = 'success', ms = 3000) => {
+    setToast({ visible: true, message, type });
+    setTimeout(() => setToast(prev => ({ ...prev, visible: false })), ms);
+  };
+
+  // Load user addresses when tab active
+  useEffect(() => {
+    if (activeTab === 'addresses') fetchAddresses();
+  }, [activeTab]);
+
+  // Load orders when orders tab active
+  useEffect(() => {
+    if (activeTab === 'orders') fetchOrders();
+  }, [activeTab]);
+
+  // Update user profile - LOCAL STORAGE VERSION (temporary)
+  const updateUserProfile = async (profileData) => {
+    try {
+      setLoading(prev => ({ ...prev, profile: true }));
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 700));
+      const currentUserData = JSON.parse(localStorage.getItem('user')) || {};
+      const updatedUserData = { ...currentUserData, user: { ...currentUserData.user, name: profileData.name, phone: profileData.phone, phone2: profileData.phone2, email: profileData.email } };
+      localStorage.setItem('user', JSON.stringify(updatedUserData));
+      return { success: true, data: updatedUserData };
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(prev => ({ ...prev, profile: false }));
+    }
+  };
+
+  // Fetch user addresses - try API, fallback to localStorage
+  const fetchAddresses = async () => {
+    try {
+      setLoading(prev => ({ ...prev, addresses: true }));
+      const response = await fetch(`${API_BASE_URL}/user/addresses`, { headers: getHeaders() });
+      const result = await response.json().catch(() => ({}));
+      if (response.ok) {
+        setAddresses(result.addresses || result.data || []);
+      } else {
+        // fallback
+        console.warn('API failed to fetch addresses, using localStorage fallback');
+        const local = JSON.parse(localStorage.getItem('local_addresses') || '[]');
+        setAddresses(local);
+      }
+    } catch (error) {
+      console.warn('Error fetching addresses, using localStorage fallback', error);
+      const local = JSON.parse(localStorage.getItem('local_addresses') || '[]');
+      setAddresses(local);
+    } finally {
+      setLoading(prev => ({ ...prev, addresses: false }));
+    }
+  };
+
+  // Save addresses to local fallback store
+  const saveAddressesToLocal = (list) => {
+    try {
+      localStorage.setItem('local_addresses', JSON.stringify(list));
+    } catch (e) {
+      console.error('Failed to save local addresses', e);
+    }
+  };
+
+  // Add or update address - try API, fallback to localStorage
+  const saveAddress = async (addressData) => {
+    // Normalize data
+    const payload = { title: addressData.title, details: addressData.details, isDefault: !!addressData.isDefault };
+    // If editing, editingAddressId is set
+    try {
+      const url = editingAddressId ? `${API_BASE_URL}/user/addresses/${editingAddressId}` : `${API_BASE_URL}/user/addresses`;
+      const method = editingAddressId ? 'PUT' : 'POST';
+      const response = await fetch(url, { method, headers: getHeaders(), body: JSON.stringify(payload) });
+      const result = await response.json().catch(() => ({}));
+      if (response.ok) {
+        // refresh from API
+        await fetchAddresses();
+        return { success: true };
+      } else {
+        // fallback to local save
+        console.warn('API saveAddress failed, falling back to local storage', result);
+        let local = JSON.parse(localStorage.getItem('local_addresses') || '[]');
         if (editingAddressId) {
-            // Update existing address
-            setAddresses(addresses.map(addr =>
-                addr.id === editingAddressId
-                    ? { ...newAddress, id: editingAddressId }
-                    : newAddress.isDefault ? { ...addr, isDefault: false } : addr
-            ));
-            setEditingAddressId(null);
+          local = local.map(a => (a.id === editingAddressId ? { ...a, ...payload } : a));
         } else {
-            // Add new address
-            const newId = Math.max(0, ...addresses.map(a => a.id)) + 1;
-            setAddresses(prev => [
-                ...prev.map(addr => newAddress.isDefault ? { ...addr, isDefault: false } : addr),
-                { ...newAddress, id: newId }
-            ]);
+          // assign a new id
+          const newId = Date.now();
+          const newAddr = { id: newId, ...payload };
+          // if new address is default, unset others
+          if (newAddr.isDefault) local = local.map(a => ({ ...a, isDefault: false }));
+          local = [newAddr, ...local];
         }
-        setNewAddress({ title: '', details: '', isDefault: false });
-        setShowAddressForm(false);
-    };
+        saveAddressesToLocal(local);
+        setAddresses(local);
+        return { success: true, fallback: true };
+      }
+    } catch (error) {
+      console.warn('Error saving address, using localStorage fallback', error);
+      // local fallback
+      let local = JSON.parse(localStorage.getItem('local_addresses') || '[]');
+      if (editingAddressId) {
+        local = local.map(a => (a.id === editingAddressId ? { ...a, ...payload } : a));
+      } else {
+        const newId = Date.now();
+        const newAddr = { id: newId, ...payload };
+        if (newAddr.isDefault) local = local.map(a => ({ ...a, isDefault: false }));
+        local = [newAddr, ...local];
+      }
+      saveAddressesToLocal(local);
+      setAddresses(local);
+      return { success: true, fallback: true };
+    }
+  };
 
-    const handleEditAddress = (address) => {
-        setNewAddress({
-            title: address.title,
-            details: address.details,
-            isDefault: address.isDefault
-        });
-        setEditingAddressId(address.id);
-        setShowAddressForm(true);
-    };
+  // Delete address - try API, fallback to local
+  const deleteAddress = async (addressId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/user/addresses/${addressId}`, { method: 'DELETE', headers: getHeaders() });
+      if (response.ok) {
+        await fetchAddresses();
+        return { success: true };
+      } else {
+        const result = await response.json().catch(() => ({}));
+        console.warn('API delete failed, falling back to local', result);
+        let local = JSON.parse(localStorage.getItem('local_addresses') || '[]');
+        local = local.filter(a => a.id !== addressId);
+        saveAddressesToLocal(local);
+        setAddresses(local);
+        return { success: true, fallback: true };
+      }
+    } catch (error) {
+      console.warn('Error deleting address, using localStorage fallback', error);
+      let local = JSON.parse(localStorage.getItem('local_addresses') || '[]');
+      local = local.filter(a => a.id !== addressId);
+      saveAddressesToLocal(local);
+      setAddresses(local);
+      return { success: true, fallback: true };
+    }
+  };
 
-    const handleDeleteAddress = (id) => {
-        if (window.confirm('هل أنت متأكد من حذف هذا العنوان؟')) {
-            setAddresses(addresses.filter(addr => addr.id !== id));
-        }
-    };
+  // Set default address
+  const setDefaultAddress = async (addressId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/user/addresses/${addressId}/default`, { method: 'PUT', headers: getHeaders() });
+      if (response.ok) {
+        await fetchAddresses();
+        return { success: true };
+      } else {
+        console.warn('API setDefault failed, falling back to local');
+        let local = JSON.parse(localStorage.getItem('local_addresses') || '[]');
+        local = local.map(a => ({ ...a, isDefault: a.id === addressId }));
+        saveAddressesToLocal(local);
+        setAddresses(local);
+        return { success: true, fallback: true };
+      }
+    } catch (error) {
+      console.warn('Error setting default address, using local fallback', error);
+      let local = JSON.parse(localStorage.getItem('local_addresses') || '[]');
+      local = local.map(a => ({ ...a, isDefault: a.id === addressId }));
+      saveAddressesToLocal(local);
+      setAddresses(local);
+      return { success: true, fallback: true };
+    }
+  };
 
-    const handleSetDefaultAddress = (id) => {
-        setAddresses(addresses.map(addr => ({
-            ...addr,
-            isDefault: addr.id === id
-        })));
-    };
+  // Fetch user orders - try API, fallback to empty
+  const fetchOrders = async () => {
+    try {
+      setLoading(prev => ({ ...prev, orders: true }));
+      const response = await fetch(`${API_BASE_URL}/user/orders`, { headers: getHeaders() });
+      const result = await response.json().catch(() => ({}));
+      if (response.ok) {
+        const ordersWithDetails = (result.orders || result.data || []).map(order => ({ ...order, showDetails: false }));
+        setOrders(ordersWithDetails);
+      } else {
+        console.warn('Failed to fetch orders from API, using empty fallback');
+        setOrders([]);
+      }
+    } catch (error) {
+      console.warn('Error fetching orders', error);
+      setOrders([]);
+    } finally {
+      setLoading(prev => ({ ...prev, orders: false }));
+    }
+  };
 
-    const toggleOrderDetails = (orderId) => {
-        setOrders(orders.map(order =>
-            order.id === orderId
-                ? { ...order, showDetails: !order.showDetails }
-                : order
-        ));
-    };
+  // Form handlers
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setUserData(prev => ({ ...prev, [name]: value }));
+  };
 
-    // Tabs state
-    const [activeTab, setActiveTab] = useState('profile');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const result = await updateUserProfile({ name: userData.name, phone: userData.phone, phone2: userData.phone2, email: userData.email });
+    if (result.success) {
+      setUserData(prev => ({ ...prev, isEditing: false }));
+      showToast('تم تحديث البيانات بنجاح!', 'success');
+    } else {
+      showToast(`خطأ: ${result.error || 'حدث خطأ'}`, 'error');
+    }
+  };
 
-    // Logout function
-    const handleLogout = (e) => {
-        e.preventDefault();
-        // This will trigger the logout modal in the Navbar component
-        document.dispatchEvent(new CustomEvent('showLogoutModal'));
-    };
+  // Address handlers
+  const handleAddressInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setNewAddress(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  };
 
-    return (
-        <div className="profile-container">
-            <div className="profile-header">
-                <h1>الملف الشخصي</h1>
-                <p> مرحباً بك &nbsp;
-                    <span>
-                        {(() => {
-                            try {
-                                const userData = JSON.parse(localStorage.getItem('user'));
-                                return userData?.user?.name || 'المستخدم';
-                            } catch {
-                                return 'المستخدم';
-                            }
-                        })()}
-                    </span>
+  const handleAddAddress = async (e) => {
+    e.preventDefault();
 
-                </p>
-            </div>
+    // Basic validation
+    if (!newAddress.title.trim() || !newAddress.details.trim()) {
+      showToast('يرجى إدخال عنوان وتفاصيل صحيحة', 'error');
+      return;
+    }
 
-            <div className="profile-tabs">
-                <div className="d-flex justify-content-between w-100 align-items-center">
-                    <div className="d-flex">
-                        <button
-                            className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('profile')}
-                        >
-                            <FaUser className="tab-icon" /> البيانات الشخصية
-                        </button>
-                        <button
-                            className={`tab-btn ${activeTab === 'addresses' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('addresses')}
-                        >
-                            <FaMapMarkerAlt className="tab-icon" /> العناوين
-                        </button>
-                        <button
-                            className={`tab-btn ${activeTab === 'orders' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('orders')}
-                        >
-                            <FaBox className="tab-icon" /> طلباتي
-                        </button>
-                    </div>
-                    <button
-                        className="btn btn-outline-danger log-out-pro"
-                        onClick={handleLogout}
-                    >
-                        <i className="bx bx-log-out me-1"></i> تسجيل الخروج
-                    </button>
-                </div>
-            </div>
+    const result = await saveAddress({ title: newAddress.title.trim(), details: newAddress.details.trim(), isDefault: newAddress.isDefault });
+    if (result.success) {
+      const msg = editingAddressId ? 'تم تحديث العنوان بنجاح!' : 'تم إضافة العنوان بنجاح!';
+      showToast(msg, 'success');
+      // reset form
+      setNewAddress({ title: '', details: '', isDefault: false });
+      setShowAddressForm(false);
+      setEditingAddressId(null);
+    } else {
+      showToast(`خطأ: ${result.error || 'فشل حفظ العنوان'}`, 'error');
+    }
+  };
 
-            <div className="tab-content">
-                {activeTab === 'profile' && (
-                    <div className="profile-section">
-                        <div className="section-header">
-                            <h2>البيانات الشخصية</h2>
-                            {!userData.isEditing && (
-                                <button
-                                    className="edit-btn"
-                                    onClick={() => setUserData(prev => ({ ...prev, isEditing: true }))}
-                                >
-                                    <FaEdit /> تعديل
-                                </button>
-                            )}
-                        </div>
+  const handleEditAddress = (address) => {
+    setNewAddress({ title: address.title || '', details: address.details || '', isDefault: !!address.isDefault });
+    setEditingAddressId(address.id);
+    setShowAddressForm(true);
+  };
 
-                        {userData.isEditing ? (
-                            <form onSubmit={handleSubmit} className="profile-form">
-                                <div className="form-group">
-                                    <label>الاسم بالكامل</label>
-                                    <input
-                                        type="text"
-                                        name="name"
-                                        value=
-                                        {userData.name}
-                                        onChange={handleInputChange}
-                                        required
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>رقم الهاتف</label>
-                                    <input
-                                        type="tel"
-                                        name="phone"
-                                        value={userData.phone}
-                                        onChange={handleInputChange}
-                                        required
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>البريد الإلكتروني</label>
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        value={userData.email}
-                                        onChange={handleInputChange}
-                                        required
-                                    />
-                                </div>
-                                <div className="form-actions">
-                                    <button type="submit" className="save-btn">حفظ التغييرات</button>
-                                    <button
-                                        type="button"
-                                        className="cancel-btn"
-                                        onClick={() => setUserData(prev => ({ ...prev, isEditing: false }))}
-                                    >
-                                        إلغاء
-                                    </button>
-                                </div>
-                            </form>
-                        ) : (
-                            <div className="profile-info" dir="ltr">
-                                <div className="info-item">
-                                    <FaUser className="info-icon" />
-                                    <div>
-                                        <span className="info-value">
-                                            <span className="info-label">الاسم:</span>
-                                            <span>
-                                                {(() => {
-                                                    try {
-                                                        const userData = JSON.parse(localStorage.getItem('user'));
-                                                        return userData?.user?.name || 'المستخدم';
-                                                    } catch {
-                                                        return 'المستخدم';
-                                                    }
-                                                })()}
-                                            </span>
+  const handleDeleteAddress = async (id) => {
+    // confirmed via window.confirm because the user didn't ask to change confirm UI
+    if (window.confirm('هل أنت متأكد من حذف هذا العنوان؟')) {
+      const result = await deleteAddress(id);
+      if (result.success) {
+        showToast('تم حذف العنوان بنجاح!', 'success');
+      } else {
+        showToast(`خطأ: ${result.error || 'فشل الحذف'}`, 'error');
+      }
+    }
+  };
 
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="info-item">
-                                    <FaPhone className="info-icon" />
-                                    <div>
-                                        <span className="info-label">رقم الهاتف:</span>
-                                        <span className="info-value"><span>
-                                            {(() => {
-                                                try {
-                                                    const userData = JSON.parse(localStorage.getItem('user'));
-                                                    return userData?.user?.phone || 'الهاتف';
-                                                } catch {
-                                                    return 'الهاتف';
-                                                }
-                                            })()}
-                                        </span></span>
-                                    </div>
-                                </div>
-                                <div className="info-item">
-                                    <FaEnvelope className="info-icon" />
-                                    <div>
-                                        <span className="info-value"><span>
-                                            {(() => {
-                                                try {
-                                                    const userData = JSON.parse(localStorage.getItem('user'));
-                                                    return userData?.user?.email || 'البريد';
-                                                } catch {
-                                                    return 'البريد';
-                                                }
-                                            })()}
-                                        </span></span>
-                                        <span className="info-label">:البريد الإلكتروني</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )}
+  const handleSetDefaultAddress = async (id) => {
+    const result = await setDefaultAddress(id);
+    if (result.success) {
+      showToast('تم تعيين العنوان الافتراضي بنجاح!', 'success');
+    } else {
+      showToast(`خطأ: ${result.error || 'فشل التعيين'}`, 'error');
+    }
+  };
 
-                {activeTab === 'addresses' && (
-                    <div className="addresses-section">
-                        <div className="section-header">
-                            <h2>عناويني</h2>
-                            <button
-                                className="add-address-btn"
-                                onClick={() => {
-                                    setNewAddress({ title: '', details: '', isDefault: false });
-                                    setEditingAddressId(null);
-                                    setShowAddressForm(!showAddressForm);
-                                }}
-                            >
-                                <FaPlus /> {showAddressForm ? 'إلغاء' : 'إضافة عنوان جديد'}
-                            </button>
-                        </div>
+  const toggleOrderDetails = (orderId) => {
+    setOrders(orders.map(order => order.id === orderId ? { ...order, showDetails: !order.showDetails } : order));
+  };
 
-                        {showAddressForm && (
-                            <div className="address-form-container">
-                                <h3>{editingAddressId ? 'تعديل العنوان' : 'إضافة عنوان جديد'}</h3>
-                                <form onSubmit={handleAddAddress} className="address-form">
-                                    <div className="form-group">
-                                        <label>عنوان مميز (مثال: المنزل، العمل)</label>
-                                        <input
-                                            type="text"
-                                            name="title"
-                                            value={newAddress.title}
-                                            onChange={handleAddressInputChange}
-                                            required
-                                            placeholder="مثال: المنزل، العمل"
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>تفاصيل العنوان</label>
-                                        <textarea
-                                            name="details"
-                                            value={newAddress.details}
-                                            onChange={handleAddressInputChange}
-                                            required
-                                            rows="3"
-                                            placeholder="الشارع، المدينة، المحافظة، الرمز البريدي"
-                                        ></textarea>
-                                    </div>
-                                    <div className="form-group checkbox-group">
-                                        <input
-                                            type="checkbox"
-                                            id="default-address"
-                                            name="isDefault"
-                                            checked={newAddress.isDefault}
-                                            onChange={handleAddressInputChange}
-                                        />
-                                        <label htmlFor="default-address">تعيين كعنوان افتراضي</label>
-                                    </div>
-                                    <div className="form-actions">
-                                        <button type="submit" className="save-btn">
-                                            {editingAddressId ? 'تحديث العنوان' : 'إضافة العنوان'}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="cancel-btn"
-                                            onClick={() => setShowAddressForm(false)}
-                                        >
-                                            إلغاء
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        )}
+  // Logout function
+  const handleLogout = (e) => {
+    e.preventDefault();
+    document.dispatchEvent(new CustomEvent('showLogoutModal'));
+  };
 
-                        <div className="addresses-grid">
-                            {addresses.length === 0 ? (
-                                <div className="no-addresses">
-                                    <FaMapMarkerAlt className="empty-icon" />
-                                    <p>لا توجد عناوين مضافة</p>
-                                </div>
-                            ) : (
-                                addresses.map(address => (
-                                    <div key={address.id} className={`address-card ${address.isDefault ? 'default' : ''}`}>
-                                        {address.isDefault && <div className="default-badge">افتراضي</div>}
-                                        <h3>{address.title}</h3>
-                                        <p>{address.details}</p>
-                                        <div className="address-actions">
-                                            <button
-                                                className="edit-address-btn"
-                                                onClick={() => handleEditAddress(address)}
-                                            >
-                                                <FaEdit /> تعديل
-                                            </button>
-                                            {!address.isDefault && (
-                                                <button
-                                                    className="delete-address-btn"
-                                                    onClick={() => handleDeleteAddress(address.id)}
-                                                >
-                                                    <FaTrash /> حذف
-                                                </button>
-                                            )}
-                                            {!address.isDefault && (
-                                                <button
-                                                    className="set-default-btn"
-                                                    onClick={() => handleSetDefaultAddress(address.id)}
-                                                >
-                                                    <FaCheck /> تعيين كافتراضي
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
-                )}
+  // Get current user data for display
+  const currentUser = getUserData();
 
-                {activeTab === 'orders' && (
-                    <div className="orders-section">
-                        <h2>سجل الطلبات</h2>
-                        {orders.length === 0 ? (
-                            <div className="no-orders">
-                                <FaBox className="empty-icon" />
-                                <p>لا توجد طلبات سابقة</p>
-                                <Link to="/products" className="browse-btn">تصفح المنتجات</Link>
-                            </div>
-                        ) : (
-                            <div className="orders-list">
-                                {orders.map(order => (
-                                    <div key={order.id} className="order-card">
-                                        <div className="order-header">
-                                            <div>
-                                                <span className="order-id">طلب # {order.id}</span>
-                                                <span className="order-date">
-                                                    {new Date(order.date).toLocaleDateString('ar-EG', {
-                                                        year: 'numeric',
-                                                        month: 'long',
-                                                        day: 'numeric'
-                                                    })}
-                                                </span>
-                                            </div>
-                                            <div className={`order-status ${order.status === 'تم التوصيل' ? 'delivered' : 'shipping'}`}>
-                                                {order.status === 'تم التوصيل' ? (
-                                                    <FaCheckCircle className="status-icon" />
-                                                ) : (
-                                                    <FaTruck className="status-icon" />
-                                                )}
-                                                {order.status}
-                                            </div>
-                                        </div>
-
-                                        <div className="order-items">
-                                            {order.items.slice(0, order.showDetails ? order.items.length : 2).map((item, index) => (
-                                                <div key={index} className="order-item">
-                                                    <span className="item-name">{item.name}</span>
-                                                    <span className="item-quantity">× {item.quantity}</span>
-                                                    <span className="item-price">{item.price * item.quantity} ر.س</span>
-                                                </div>
-                                            ))}
-                                            {order.items.length > 2 && !order.showDetails && (
-                                                <button
-                                                    className="show-more-items"
-                                                    onClick={() => toggleOrderDetails(order.id)}
-                                                >
-                                                    + {order.items.length - 2} عناصر أخرى
-                                                </button>
-                                            )}
-                                        </div>
-
-                                        <div className="order-footer">
-                                            <div className="order-total">
-                                                <span>المجموع:</span>
-                                                <span className="total-amount">{order.total} ر.س</span>
-                                            </div>
-                                            <div className="order-actions">
-                                                {order.tracking && (
-                                                    <a
-                                                        href={`/tracking/${order.tracking}`}
-                                                        className="track-order-btn"
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                    >
-                                                        <FaTruck /> تتبع الشحنة
-                                                    </a>
-                                                )}
-                                                <button
-                                                    className="order-details-btn"
-                                                    onClick={() => toggleOrderDetails(order.id)}
-                                                >
-                                                    {order.showDetails ? 'إخفاء التفاصيل' : 'تفاصيل الطلب'}
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        {order.showDetails && (
-                                            <div className="order-details">
-                                                <h4>تفاصيل الطلب</h4>
-                                                <div className="order-details-grid">
-                                                    <div className="detail-item">
-                                                        <span className="detail-label">رقم الطلب:</span>
-                                                        <span className="detail-value">{order.id}</span>
-                                                    </div>
-                                                    <div className="detail-item">
-                                                        <span className="detail-label">تاريخ الطلب:</span>
-                                                        <span className="detail-value">
-                                                            {new Date(order.date).toLocaleDateString('ar-EG', {
-                                                                year: 'numeric',
-                                                                month: 'long',
-                                                                day: 'numeric',
-                                                                hour: '2-digit',
-                                                                minute: '2-digit'
-                                                            })}
-                                                        </span>
-                                                    </div>
-                                                    <div className="detail-item">
-                                                        <span className="detail-label">حالة الطلب:</span>
-                                                        <span className="detail-value">{order.status}</span>
-                                                    </div>
-                                                    {order.tracking && (
-                                                        <div className="detail-item">
-                                                            <span className="detail-label">رقم التتبع:</span>
-                                                            <span className="detail-value">{order.tracking}</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <h4>العناصر المطلوبة</h4>
-                                                <div className="order-items-details">
-                                                    {order.items.map((item, index) => (
-                                                        <div key={index} className="order-item-detail">
-                                                            <div className="item-info">
-                                                                <span className="item-name">{item.name}</span>
-                                                                <span className="item-price">{item.price} ر.س × {item.quantity}</span>
-                                                            </div>
-                                                            <div className="item-subtotal">
-                                                                {item.price * item.quantity} ر.س
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-
-                                                <div className="order-summary">
-                                                    <div className="summary-row">
-                                                        <span>المجموع الفرعي:</span>
-                                                        <span>{order.total}ر.س</span>
-                                                    </div>
-                                                    <div className="summary-row">
-                                                        <span>الشحن:</span>
-                                                        <span>مجاناً</span>
-                                                    </div>
-                                                    <div className="summary-row total">
-                                                        <span>الإجمالي:</span>
-                                                        <span>{order.total}ر.س</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
+  return (
+    <div className="profile-container">
+      {/* Toast top-left */}
+      {toast.visible && (
+        <div className={`app-toast ${toast.type === 'success' ? 'success' : 'error'}`} style={{ position: 'fixed', top: 16, left: 16, background: '#dff7e6', color: '#065f46', padding: '10px 14px', borderRadius: 8, boxShadow: '0 6px 18px rgba(0,0,0,0.08)', zIndex: 9999 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <FaCheck />
+            <div>{toast.message}</div>
+          </div>
         </div>
-    );
+      )}
+
+      <div className="profile-header">
+        <h1>الملف الشخصي</h1>
+        <p> مرحباً بك &nbsp; <span>{currentUser.name || 'المستخدم'}</span> </p>
+      </div>
+
+      <div className="profile-tabs">
+        <div className="d-flex justify-content-between w-100 align-items-center">
+          <div className="d-flex">
+            <button className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}>
+              <FaUser className="tab-icon" /> البيانات الشخصية
+            </button>
+            <button className={`tab-btn ${activeTab === 'addresses' ? 'active' : ''}`} onClick={() => setActiveTab('addresses')}>
+              <FaMapMarkerAlt className="tab-icon" /> العناوين
+            </button>
+            <button className={`tab-btn ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')}>
+              <FaBox className="tab-icon" /> طلباتي
+            </button>
+          </div>
+
+          <button className="btn btn-outline-danger log-out-pro" onClick={handleLogout}>
+            <i className="bx bx-log-out me-1"></i> تسجيل الخروج
+          </button>
+        </div>
+      </div>
+
+      <div className="tab-content">
+        {activeTab === 'profile' && (
+          <div className="profile-section">
+            <div className="section-header">
+              <h2>البيانات الشخصية</h2>
+              {!userData.isEditing && (
+                <button className="edit-btn" onClick={() => setUserData(prev => ({ ...prev, isEditing: true }))}>
+                  <FaEdit /> تعديل
+                </button>
+              )}
+            </div>
+
+            {userData.isEditing ? (
+              <form onSubmit={handleSubmit} className="profile-form">
+                <div className="form-group">
+                  <label>الاسم بالكامل</label>
+                  <input type="text" name="name" value={userData.name} onChange={handleInputChange} required />
+                </div>
+                <div className="form-group">
+                  <label>رقم الهاتف الأول</label>
+                  <input type="tel" name="phone" value={userData.phone} onChange={handleInputChange} required />
+                </div>
+                <div className="form-group">
+                  <label>رقم الهاتف الثاني (اختياري)</label>
+                  <input type="tel" name="phone2" value={userData.phone2} onChange={handleInputChange} placeholder="رقم هاتف إضافي" />
+                </div>
+                <div className="form-group">
+                  <label>البريد الإلكتروني</label>
+                  <input type="email" name="email" value={userData.email} onChange={handleInputChange} required />
+                </div>
+                <div className="form-actions">
+                  <button type="submit" className="save-btn" disabled={loading.profile}>{loading.profile ? <FaSpinner className="fa-spin" /> : null} حفظ التغييرات</button>
+                  <button type="button" className="cancel-btn" onClick={() => setUserData(prev => ({ ...prev, isEditing: false }))}>إلغاء</button>
+                </div>
+              </form>
+            ) : (
+              <div className="profile-info" dir="ltr">
+                <div className="info-item"><FaUser className="info-icon" />
+                  <div><span className="info-value"><span className="info-label">الاسم:</span> <span>{currentUser.name || 'غير محدد'}</span></span></div>
+                </div>
+
+                <div className="info-item"><FaPhone className="info-icon" />
+                  <div><span className="info-label">رقم الهاتف الأول:</span> <span className="info-value">{currentUser.phone || 'غير محدد'}</span></div>
+                </div>
+
+                <div className="info-item"><FaPhone className="info-icon" />
+                  <div><span className="info-label">رقم الهاتف الثاني:</span> <span className="info-value">{currentUser.phone2 || 'لم يتم إضافته'}</span></div>
+                </div>
+
+                <div className="info-item"><FaEnvelope className="info-icon" />
+                  <div><span className="info-value">{currentUser.email || 'غير محدد'}</span> <span className="info-label">:البريد الإلكتروني</span></div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'addresses' && (
+          <div className="addresses-section">
+            <div className="section-header">
+              <h2>عناويني</h2>
+              <button className="add-address-btn" onClick={() => { setNewAddress({ title: '', details: '', isDefault: false }); setEditingAddressId(null); setShowAddressForm(prev => !prev); }}>
+                <FaPlus /> {showAddressForm ? 'إلغاء' : 'إضافة عنوان جديد'}
+              </button>
+            </div>
+
+            {loading.addresses && (
+              <div className="loading-container"><FaSpinner className="fa-spin" /> جاري تحميل العناوين...</div>
+            )}
+
+            {showAddressForm && (
+              <div className="address-form-container">
+                <h3>{editingAddressId ? 'تعديل العنوان' : 'إضافة عنوان جديد'}</h3>
+                <form onSubmit={handleAddAddress} className="address-form">
+                  <div className="form-group">
+                    <label>عنوان مميز (مثال: المنزل، العمل)</label>
+                    <input type="text" name="title" value={newAddress.title} onChange={handleAddressInputChange} required placeholder="مثال: المنزل، العمل" />
+                  </div>
+                  <div className="form-group">
+                    <label>تفاصيل العنوان</label>
+                    <textarea name="details" value={newAddress.details} onChange={handleAddressInputChange} required rows="3" placeholder="الشارع، المدينة، المحافظة، الرمز البريدي"></textarea>
+                  </div>
+                  <div className="form-group checkbox-group">
+                    <input type="checkbox" id="default-address" name="isDefault" checked={newAddress.isDefault} onChange={handleAddressInputChange} />
+                    <label htmlFor="default-address">تعيين كعنوان افتراضي</label>
+                  </div>
+                  <div className="form-actions">
+                    <button type="submit" className="save-btn">{editingAddressId ? 'تحديث العنوان' : 'إضافة العنوان'}</button>
+                    <button type="button" className="cancel-btn" onClick={() => setShowAddressForm(false)}>إلغاء</button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            <div className="addresses-grid">
+              {(!addresses || addresses.length === 0) ? (
+                <div className="no-addresses"><FaMapMarkerAlt className="empty-icon" /> <p>لا توجد عناوين مضافة</p></div>
+              ) : (
+                addresses.map(address => (
+                  <div key={address.id} className={`address-card ${address.isDefault ? 'default' : ''}`}>
+                    {address.isDefault && <div className="default-badge">افتراضي</div>}
+                    <h3>{address.title}</h3>
+                    <p>{address.details}</p>
+                    <div className="address-actions">
+                      <button className="edit-address-btn" onClick={() => handleEditAddress(address)}><FaEdit /> تعديل</button>
+                      {!address.isDefault && (
+                        <>
+                          <button className="delete-address-btn" onClick={() => handleDeleteAddress(address.id)}><FaTrash /> حذف</button>
+                          <button className="set-default-btn" onClick={() => handleSetDefaultAddress(address.id)}><FaCheck /> تعيين كافتراضي</button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'orders' && (
+          <div className="orders-section">
+            <h2>سجل الطلبات</h2>
+            {loading.orders && (<div className="loading-container"><FaSpinner className="fa-spin" /> جاري تحميل الطلبات...</div>)}
+            {orders.length === 0 && !loading.orders ? (
+              <div className="no-orders"><FaBox className="empty-icon" /> <p>لا توجد طلبات سابقة</p> <Link to="/FullRecentProductsPage" className="browse-btn">تصفح المنتجات</Link></div>
+            ) : (
+              <div className="orders-list">
+                {orders.map(order => (
+                  <div key={order.id} className="order-card">
+                    <div className="order-header">
+                      <div>
+                        <span className="order-id">طلب # {order.id}</span>
+                        <span className="order-date">{new Date(order.date || order.created_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                      </div>
+                      <div className={`order-status ${order.status === 'تم التوصيل' || order.status === 'delivered' ? 'delivered' : 'shipping'}`}>
+                        {order.status === 'تم التوصيل' || order.status === 'delivered' ? (<FaCheckCircle className="status-icon" />) : (<FaTruck className="status-icon" />)}
+                        {order.status}
+                      </div>
+                    </div>
+
+                    <div className="order-items">
+                      {(order.items || []).slice(0, order.showDetails ? order.items.length : 2).map((item, index) => (
+                        <div key={index} className="order-item">
+                          <span className="item-name">{item.name || item.product_name}</span>
+                          <span className="item-quantity">× {item.quantity}</span>
+                          <span className="item-price">{((item.price || item.product_price) * item.quantity) || 0} ر.س</span>
+                        </div>
+                      ))}
+
+                      {(order.items || []).length > 2 && !order.showDetails && (
+                        <button className="show-more-items" onClick={() => toggleOrderDetails(order.id)}>+ {order.items.length - 2} عناصر أخرى</button>
+                      )}
+                    </div>
+
+                    <div className="order-footer">
+                      <div className="order-total"><span>المجموع:</span> <span className="total-amount">{order.total || order.total_amount} ر.س</span></div>
+                      <div className="order-actions">
+                        {order.tracking && (<a href={`/tracking/${order.tracking}`} className="track-order-btn" target="_blank" rel="noopener noreferrer"><FaTruck /> تتبع الشحنة</a>)}
+                        <button className="order-details-btn" onClick={() => toggleOrderDetails(order.id)}>{order.showDetails ? 'إخفاء التفاصيل' : 'تفاصيل الطلب'}</button>
+                      </div>
+                    </div>
+
+                    {order.showDetails && (
+                      <div className="order-details">
+                        <h4>تفاصيل الطلب</h4>
+                        <div className="order-details-grid">
+                          <div className="detail-item"><span className="detail-label">رقم الطلب:</span> <span className="detail-value">{order.id}</span></div>
+                          <div className="detail-item"><span className="detail-label">تاريخ الطلب:</span> <span className="detail-value">{new Date(order.date || order.created_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span></div>
+                          <div className="detail-item"><span className="detail-label">حالة الطلب:</span> <span className="detail-value">{order.status}</span></div>
+                          {order.tracking && (<div className="detail-item"><span className="detail-label">رقم التتبع:</span> <span className="detail-value">{order.tracking}</span></div>)}
+                        </div>
+
+                        <h4>العناصر المطلوبة</h4>
+                        <div className="order-items-details">
+                          {(order.items || []).map((item, index) => (
+                            <div key={index} className="order-item-detail">
+                              <div className="item-info">
+                                <span className="item-name">{item.name || item.product_name}</span>
+                                <span className="item-price">{item.price || item.product_price} ر.س × {item.quantity}</span>
+                              </div>
+                              <div className="item-subtotal">{((item.price || item.product_price) * item.quantity) || 0} ر.س</div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="order-summary">
+                          <div className="summary-row"><span>المجموع الفرعي:</span> <span>{order.subtotal || order.total || order.total_amount} ر.س</span></div>
+                          <div className="summary-row"><span>الشحن:</span> <span>{order.shipping_cost || 'مجاناً'}</span></div>
+                          <div className="summary-row total"><span>الإجمالي:</span> <span>{order.total || order.total_amount} ر.س</span></div>
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
 };
 
 export default Profile;

@@ -46,6 +46,7 @@ function HomePageContent() {
       <MostDemandedProducts title="مستلزمات الأكسسوارات" />
       <Features />
       <Testimonials />
+      <FAQSection />
     </>
   );
 }
@@ -53,6 +54,7 @@ function HomePageContent() {
 function AppContent() {
   const location = useLocation();
   const isDashboardPage = location.pathname.startsWith("/Dashboard");
+  const isHomePage = location.pathname === "/";
 
   return (
     <>
@@ -60,7 +62,7 @@ function AppContent() {
       <AppRoutes />
       {!isDashboardPage && (
         <>
-          <FAQSection />
+          {isHomePage && <FAQSection />}
           {/* <ContactSection /> */}
           <Footer />
           <FloatingButtons />

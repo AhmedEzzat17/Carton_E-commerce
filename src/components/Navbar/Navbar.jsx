@@ -8,6 +8,7 @@ import Login from "../Auth/Login";
 import Register from "../Auth/Register";
 import { CartWishlistContext } from "../../App";
 
+
 const Navbar = () => {
   // Refs
   const dropdownRef = useRef(null);

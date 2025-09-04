@@ -306,7 +306,7 @@ const OrderShow = () => {
         <tbody>
           {(orders || []).map((order) => (
             <tr key={order.id} className="order-row1">
-              <td className="order-number">
+              <td className="order-number1">
                 <span className="order-ref">{order.order_number}</span>
               </td>
 
@@ -314,22 +314,22 @@ const OrderShow = () => {
                 {formatDate(order.created_at)}
               </td>
 
-              <td className="order-total">
-                <span className="total-amount">
+              <td className="order-total1">
+                <span className="total-amount1">
                   {formatPrice(order.total_amount)}
                 </span>
               </td>
 
               <td className="order-status">
-                <span className={`status-badge ${getStatusBadgeClass(order.status)}`}>
+                <span className={`status-badge1 ${getStatusBadgeClass(order.status)}`}>
                   {getStatusText(order.status)}
                 </span>
               </td>
 
-              <td className="order-actions">
+              <td className="order-actions1">
                 <Link
                   to={`/Dashboard/orders/${order.id}`}
-                  className="action-btn details-btn"
+                  className="action-btn1 details-btn1"
                   title="عرض التفاصيل"
                 >
                   <i className="bx bx-show"></i>

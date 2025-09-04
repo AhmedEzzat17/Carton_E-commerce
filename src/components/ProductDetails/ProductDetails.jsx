@@ -11,7 +11,7 @@ const inputStyle = {
   border: "1px solid #ddd",
   fontSize: "14px",
   boxShadow: "inset 0 1px 3px rgba(0,0,0,0.1)",
-  marginBottom: "10px"
+  marginBottom: "10px",
 };
 
 export default function ProductDetails({ product }) {
@@ -22,9 +22,17 @@ export default function ProductDetails({ product }) {
     length: "",
     width: "",
     height: "",
-    size: ""
+    size: "",
   });
+  const [dimensionsError, setDimensionsError] = useState({
+    length: "",
+    width: "",
+    height: "",
+    size: "",
+  });
+
   const [selectedFile, setSelectedFile] = useState(null);
+  const [fileError, setFileError] = useState("");
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const { cartItems, addToCart, removeFromCart, addToWishlist } =
     useContext(CartWishlistContext);
@@ -75,6 +83,88 @@ export default function ProductDetails({ product }) {
   // تحقق هل المنتج في السلة
   const inCart = cartItems.some((item) => item.id === product.id);
 
+  // التحقق من صحة الملف المرفق
+  const validateFile = (file) => {
+    if (!file) return true; // الملف اختياري
+
+    const allowedTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp',
+      'application/pdf'
+    ];
+    const maxSize = 10 * 1024 * 1024; // 10 ميجابايت
+
+    if (!allowedTypes.includes(file.type)) {
+      setFileError("نوع الملف غير مسموح. يُسمح فقط بالصور (JPG, PNG, GIF, BMP) أو ملفات PDF.");
+      return false;
+    }
+
+    if (file.size > maxSize) {
+      setFileError("حجم الملف كبير جداً. الحد الأقصى المسموح 10 ميجابايت.");
+      return false;
+    }
+
+    setFileError("");
+    return true;
+  };
+
+  const validateFields = () => {
+    let isValid = true;
+    const errors = {
+      length: "",
+      width: "",
+      height: "",
+      size: "",
+    };
+
+    // تحقق من الحقول مع السماح بالأرقام العشرية والمئوية
+    if (!dimensions.length) {
+      errors.length = "الطول مطلوب.";
+      isValid = false;
+    } else if (!/^\d*\.?\d+$/.test(dimensions.length)) {
+      errors.length = "الطول يجب أن يكون رقم صحيح أو عشري.";
+      isValid = false;
+    } else if (parseFloat(dimensions.length) <= 0) {
+      errors.length = "الطول يجب أن يكون أكبر من صفر.";
+      isValid = false;
+    }
+
+    if (!dimensions.width) {
+      errors.width = "العرض مطلوب.";
+      isValid = false;
+    } else if (!/^\d*\.?\d+$/.test(dimensions.width)) {
+      errors.width = "العرض يجب أن يكون رقم صحيح أو عشري.";
+      isValid = false;
+    } else if (parseFloat(dimensions.width) <= 0) {
+      errors.width = "العرض يجب أن يكون أكبر من صفر.";
+      isValid = false;
+    }
+
+    if (!dimensions.height) {
+      errors.height = "الارتفاع مطلوب.";
+      isValid = false;
+    } else if (!/^\d*\.?\d+$/.test(dimensions.height)) {
+      errors.height = "الارتفاع يجب أن يكون رقم صحيح أو عشري.";
+      isValid = false;
+    } else if (parseFloat(dimensions.height) <= 0) {
+      errors.height = "الارتفاع يجب أن يكون أكبر من صفر.";
+      isValid = false;
+    }
+
+    if (!dimensions.size) {
+      errors.size = "المقاس مطلوب.";
+      isValid = false;
+    }
+
+    setDimensionsError(errors);
+
+    // التحقق من الملف
+    if (!validateFile(selectedFile)) {
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
   return (
     <>
       {/* رسالة النجاح */}
@@ -118,402 +208,552 @@ export default function ProductDetails({ product }) {
           </div>
         </div>
       )}
-    <section className="product-details-section container">
-      <div className="product-wrapper">
-        {/* Product Info */}
-        <div className="product-info-column" data-aos="fade-down">
-          <h1 className="product-title">{product.name}</h1>
-          <p className="product-description">{product.description}</p>
+      <section className="product-details-section container">
+        <div className="product-wrapper">
+          {/* Product Info */}
+          <div className="product-info-column" data-aos="fade-down">
+            <h1 className="product-title">{product.name}</h1>
+            <p className="product-description">{product.description}</p>
 
-          <div className="product-price">
-            <span className="current-price">{product.price} ريال</span>
-            {product.compare_price && (
-              <span className="old-price">{product.compare_price} ريال</span>
-            )}
-          </div>
-
-          {product.compare_price && (
-            <div
-              className="discount-badge"
-              style={{
-                color: "red",
-                fontWeight: "bold",
-                marginBottom: "20px",
-                fontSize: "19px",
-              }}
-            >
-              خصم :{" "}
-              {Math.round(
-                ((product.compare_price - product.price) /
-                  product.compare_price) *
-                  100
+            <div className="product-price">
+              <span className="current-price">{product.price} ريال</span>
+              {product.compare_price && (
+                <span className="old-price">{product.compare_price} ريال</span>
               )}
-              %
-            </div>
-          )}
-
-          {/* Quantity */}
-          <div className="product-options">
-            <div className="quantity-selector">
-              <label htmlFor="quantity">الكمية:</label>
-              <input type="number" id="quantity" defaultValue="1" min="1" />
             </div>
 
-            {/* Colors */}
-            {product.variants &&
-              product.variants
-                .filter((v) => v.name === "اللون")
-                .map((variant) => (
-                  <div className="color-selector" key={variant.id}>
-                    <label>{variant.name}:</label>
-                    <div className="color-options">
-                      {variant.values.map((val) => (
-                        <span
-                          key={val.id}
-                          className="color-item"
-                          style={{
-                            backgroundColor: val.color_name,
-                            border: "1px solid #ccc",
-                          }}
-                          onClick={() =>
-                            console.log("Selected Color:", val.value)
-                          }
-                        ></span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-
-            {/* Sizes */}
-            {product.variants &&
-              product.variants
-                .filter((v) => v.name === "المقاس")
-                .map((variant) => (
-                  <div className="size-selector" key={variant.id}>
-                    <label>{variant.name}:</label>
-                    <div className="size-options">
-                      {variant.values.map((val) => (
-                        <span key={val.id} className="size-item">
-                          {val.value}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-
-            {/* رابط نصي لفتح نافذة الملاحظة */}
-            {inCart ? (
+            {product.compare_price && (
               <div
-                className="note-text-link"
+                className="discount-badge"
                 style={{
-                  marginTop: "10px",
-                  direction: "rtl",
-                  fontSize: "21px",
-                  cursor: "pointer",
-                  textDecoration: "underline",
-                  textAlign: "center",
                   color: "red",
                   fontWeight: "bold",
-                  transition: "all 0.3s",
+                  marginBottom: "20px",
+                  fontSize: "19px",
                 }}
+              >
+                خصم :{" "}
+                {Math.round(
+                  ((product.compare_price - product.price) /
+                    product.compare_price) *
+                    100
+                )}
+                %
+              </div>
+            )}
+
+            {/* Quantity */}
+            <div className="product-options">
+              <div className="quantity-selector">
+                <label htmlFor="quantity">الكمية:</label>
+                <input type="number" id="quantity" defaultValue="1" min="1" />
+              </div>
+
+              {/* Colors */}
+              {product.variants &&
+                product.variants
+                  .filter((v) => v.name === "اللون")
+                  .map((variant) => (
+                    <div className="color-selector" key={variant.id}>
+                      <label>{variant.name}:</label>
+                      <div className="color-options">
+                        {variant.values.map((val) => (
+                          <span
+                            key={val.id}
+                            className="color-item"
+                            style={{
+                              backgroundColor: val.color_name,
+                              border: "1px solid #ccc",
+                            }}
+                            onClick={() =>
+                              console.log("Selected Color:", val.value)
+                            }
+                          ></span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+              {/* Sizes */}
+              {product.variants &&
+                product.variants
+                  .filter((v) => v.name === "المقاس")
+                  .map((variant) => (
+                    <div className="size-selector" key={variant.id}>
+                      <label>{variant.name}:</label>
+                      <div className="size-options">
+                        {variant.values.map((val) => (
+                          <span key={val.id} className="size-item">
+                            {val.value}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+              {/* رابط نصي لفتح نافذة الملاحظة */}
+              {inCart ? (
+                <div
+                  className="note-text-link"
+                  style={{
+                    marginTop: "10px",
+                    direction: "rtl",
+                    fontSize: "21px",
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                    textAlign: "center",
+                    color: "red",
+                    fontWeight: "bold",
+                    transition: "all 0.3s",
+                  }}
+                  onClick={() => {
+                    const modal = document.getElementById("noteModal");
+                    if (modal) modal.style.display = "flex";
+                  }}
+                >
+                  إضغط هنا حتى يمكنك كتابة طلب خاص للبائع تخص الطلب.
+                </div>
+              ) : (
+                <div
+                  style={{
+                    marginTop: "10px",
+                    background: "#fa0f0fff",
+                    color: "#fff",
+                    padding: "15px 25px",
+                    borderRadius: "6px",
+                    textAlign: "center",
+                    fontWeight: "bold",
+                    fontSize: "21px",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                  }}
+                >
+                  لإضافه طلب خاص للبائع تخص الطلب،أضف المنتج إلى السلة أولاً
+                </div>
+              )}
+            </div>
+
+            {/* زر السلة ديناميكي */}
+            {inCart ? (
+              <button
+                className="add-to-cart-button btn btn-danger"
+                onClick={() => removeFromCart(product)}
+              >
+                إزالة من السلة
+              </button>
+            ) : (
+              <button
+                className="add-to-cart-button btn btn-primary"
+                onClick={() => addToCart(product)}
+              >
+                أضف إلى السلة
+              </button>
+            )}
+
+            <button
+              className="buy-now-button"
+              onClick={() => {
+                window.scrollTo(0, 0);
+                navigate("/PaymentmMethod", { state: { product } });
+              }}
+            >
+              اشترِ الآن
+            </button>
+
+            {/* Features */}
+            <div className="product-features">
+              <h3>المميزات الرئيسية:</h3>
+              <ul>
+                {featuresList.map((feat, index) => (
+                  <li key={index}>{feat}</li>
+                ))}
+              </ul>
+              <h3>تفاصيل إضافية:</h3>
+              <p className="extra-details">{product.details}</p>
+            </div>
+          </div>
+
+          {/* Images */}
+          <div className="product-images-column">
+            <div className="main-image-container" data-aos="fade-up">
+              <div className="zoomable">
+                <img
+                  id="mainProductImage"
+                  src={mainImage}
+                  alt={product.name}
+                  className="main-product-image zoomable__img"
+                />
+              </div>
+            </div>
+
+            {/* Thumbnails */}
+            <div className="thumbnail-gallery-sidebar" data-aos="fade-down">
+              <div className="scroll-container">
+                {[
+                  product.main_image,
+                  ...(product.images || []).map((img) => img.full_url),
+                ].map((img, index) => (
+                  <img
+                    key={index}
+                    src={img}
+                    alt={`صورة ${index + 1}`}
+                    className={`thumbnail-item ${
+                      mainImage === img ? "active" : ""
+                    }`}
+                    onClick={() => setMainImage(img)}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* نافذة الملاحظة */}
+          <div
+            id="noteModal"
+            onClick={(e) => {
+              if (e.target.id === "noteModal") {
+                e.target.style.display = "none";
+              }
+            }}
+            style={{
+              display: "none",
+              position: "fixed",
+              top: 0,
+              right: 0,
+              bottom: 0,
+              left: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.7)",
+              zIndex: 1000,
+              justifyContent: "center",
+              alignItems: "center",
+              direction: "rtl",
+              transition: "all 0.3s ease-in-out",
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()} // يمنع إغلاق النافذة عند الضغط بداخلها
+              style={{
+                background: "#fff",
+                padding: "25px",
+                borderRadius: "12px",
+                width: "90%",
+                maxWidth: "550px",
+                boxShadow: "0 5px 25px rgba(0,0,0,0.15)",
+                textAlign: "right",
+                position: "relative",
+                animation: "fadeInUp 0.3s ease-in-out",
+              }}
+            >
+              {/* زر إغلاق "×" */}
+              <button
                 onClick={() => {
                   const modal = document.getElementById("noteModal");
-                  if (modal) modal.style.display = "flex";
+                  if (modal) modal.style.display = "none";
                 }}
+                style={{
+                  position: "absolute",
+                  top: "10px",
+                  left: "15px",
+                  background: "transparent",
+                  border: "none",
+                  fontSize: "22px",
+                  cursor: "pointer",
+                  color: "#000",
+                }}
+                aria-label="إغلاق"
               >
-                إضغط هنا حتى يمكنك كتابة طلب خاص للبائع تخص الطلب.
-              </div>
-            ) : (
+                <i className="fa-solid fa-xmark"></i>
+              </button>
+
+              <h3 style={{ marginBottom: "20px", textAlign: "center" }}>
+                طلب خاص
+              </h3>
+
               <div
                 style={{
-                  marginTop: "10px",
-                  background: "#fa0f0fff",
-                  color: "#fff",
-                  padding: "15px 25px",
-                  borderRadius: "6px",
-                  textAlign: "center",
-                  fontWeight: "bold",
-                  fontSize: "21px",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                  marginBottom: "15px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                  padding: "15px",
+                  borderRadius: "8px",
                 }}
               >
-                لإضافه طلب خاص للبائع تخص الطلب،أضف المنتج إلى السلة أولاً
-              </div>
-            )}
-          </div>
-
-          {/* زر السلة ديناميكي */}
-          {inCart ? (
-            <button
-              className="add-to-cart-button btn btn-danger"
-              onClick={() => removeFromCart(product)}
-            >
-              إزالة من السلة
-            </button>
-          ) : (
-            <button
-              className="add-to-cart-button btn btn-primary"
-              onClick={() => addToCart(product)}
-            >
-              أضف إلى السلة
-            </button>
-          )}
-
-          <button
-            className="buy-now-button"
-            onClick={() => {
-              window.scrollTo(0, 0);
-              navigate("/PaymentmMethod", { state: { product } });
-            }}
-            
-          >
-            اشترِ الآن
-          </button>
-
-          {/* Features */}
-          <div className="product-features">
-            <h3>المميزات الرئيسية:</h3>
-            <ul>
-              {featuresList.map((feat, index) => (
-                <li key={index}>{feat}</li>
-              ))}
-            </ul>
-            <h3>تفاصيل إضافية:</h3>
-            <p className="extra-details">{product.details}</p>
-          </div>
-        </div>
-
-        {/* Images */}
-        <div className="product-images-column">
-          <div className="main-image-container" data-aos="fade-up">
-            <div className="zoomable">
-              <img
-                id="mainProductImage"
-                src={mainImage}
-                alt={product.name}
-                className="main-product-image zoomable__img"
-              />
-            </div>
-          </div>
-
-          {/* Thumbnails */}
-          <div className="thumbnail-gallery-sidebar" data-aos="fade-down">
-            <div className="scroll-container">
-              {[
-                product.main_image,
-                ...(product.images || []).map((img) => img.full_url),
-              ].map((img, index) => (
-                <img
-                  key={index}
-                  src={img}
-                  alt={`صورة ${index + 1}`}
-                  className={`thumbnail-item ${
-                    mainImage === img ? "active" : ""
-                  }`}
-                  onClick={() => setMainImage(img)}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* نافذة الملاحظة */}
-        <div
-          id="noteModal"
-          onClick={(e) => {
-            if (e.target.id === "noteModal") {
-              e.target.style.display = "none";
-            }
-          }}
-          style={{
-            display: "none",
-            position: "fixed",
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.7)",
-            zIndex: 1000,
-            justifyContent: "center",
-            alignItems: "center",
-            direction: "rtl",
-            transition: "all 0.3s ease-in-out",
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()} // يمنع إغلاق النافذة عند الضغط بداخلها
-            style={{
-              background: "#fff",
-              padding: "25px",
-              borderRadius: "12px",
-              width: "90%",
-              maxWidth: "550px",
-              boxShadow: "0 5px 25px rgba(0,0,0,0.15)",
-              textAlign: "right",
-              position: "relative",
-              animation: "fadeInUp 0.3s ease-in-out",
-            }}
-          >
-            {/* زر إغلاق "×" */}
-            <button
-              onClick={() => {
-                const modal = document.getElementById("noteModal");
-                if (modal) modal.style.display = "none";
-              }}
-              style={{
-                position: "absolute",
-                top: "10px",
-                left: "15px",
-                background: "transparent",
-                border: "none",
-                fontSize: "22px",
-                cursor: "pointer",
-                color: "#000",
-              }}
-              aria-label="إغلاق"
-            >
-              <i className="fa-solid fa-xmark"></i>
-            </button>
-
-            <h3 style={{ marginBottom: "20px", textAlign: "center" }}>طلب خاص</h3>
-            
-            <div style={{ marginBottom: "15px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", padding: "15px", borderRadius: "8px" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "15px" }}>
-                <div>
-                  <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>الطول (سم)</label>
-                  <input
-                    type="number"
-                    value={dimensions.length}
-                    onChange={(e) => setDimensions({...dimensions, length: e.target.value})}
-                    style={inputStyle}
-                    placeholder="أدخل الطول"
-                  />
-                </div>
-                <div>
-                  <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>العرض (سم)</label>
-                  <input
-                    type="number"
-                    value={dimensions.width}
-                    onChange={(e) => setDimensions({...dimensions, width: e.target.value})}
-                    style={inputStyle}
-                    placeholder="أدخل العرض"
-                  />
-                </div>
-                <div>
-                  <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>الارتفاع (سم)</label>
-                  <input
-                    type="number"
-                    value={dimensions.height}
-                    onChange={(e) => setDimensions({...dimensions, height: e.target.value})}
-                    style={inputStyle}
-                    placeholder="أدخل الارتفاع"
-                  />
-                </div>
-                <div>
-                  <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>المقاس</label>
-                  <input
-                    type="text"
-                    value={dimensions.size}
-                    onChange={(e) => setDimensions({...dimensions, size: e.target.value})}
-                    style={inputStyle}
-                    placeholder="أدخل المقاس"
-                  />
-                </div>
-              </div>
-
-              <div style={{ marginBottom: "15px" }}>
-                <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>المرفقات</label>
-                <div className="img-pdf" style={{ border: "1px dashed #ccc", padding: "10px", borderRadius: "6px", textAlign: "center", transition: "all 0.3s" }}>
-                  <input
-                    type="file"
-                    id="file-upload"
-                    style={{ display: "none" }}
-                    onChange={(e) => setSelectedFile(e.target.files[0])}
-                  />
-                  <label htmlFor="file-upload" style={{ cursor: "pointer" }}>
-                    <i className="fa-solid fa-upload" style={{ marginLeft: "5px" }}></i>
-                    {selectedFile ? selectedFile.name : "رفع ملف (PDF أو صورة)"}
-                  </label>
-                </div>
-              </div>
-
-              <div>
-                <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>ملاحظات إضافية</label>
-                <textarea
-                  placeholder="أضف ملاحظاتك هنا"
-                  rows="4"
-                  value={note}
-                  onChange={(e) => {
-                    setNote(e.target.value);
-                    if (e.target.value.trim().length >= 5) {
-                      setNoteError("");
-                    }
-                  }}
+                <div
                   style={{
-                    width: "100%",
-                    borderRadius: "6px",
-                    border: `1px solid ${noteError ? "red" : "#ddd"}`,
-                    padding: "10px",
-                    fontFamily: "inherit",
-                    fontSize: "14px",
-                    resize: "none",
-                    boxShadow: "inset 0 1px 3px rgba(0,0,0,0.1)"
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "10px",
+                    marginBottom: "15px",
                   }}
-                ></textarea>
+                >
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: "5px",
+                        fontWeight: "500",
+                      }}
+                    >
+                      الطول (سم)
+                    </label>
+                    <input
+                      type="number"
+                      value={dimensions.length}
+                      onChange={(e) =>
+                        setDimensions({ ...dimensions, length: e.target.value })
+                      }
+                      style={{
+                        ...inputStyle,
+                        border: dimensionsError.length ? "1px solid red" : "1px solid #ddd"
+                      }}
+                      placeholder="أدخل الطول (مثال: 10.5)"
+                    />
+                    {dimensionsError.length && (
+                      <span style={{ color: "red", fontSize: "12px" }}>
+                        {dimensionsError.length}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: "5px",
+                        fontWeight: "500",
+                      }}
+                    >
+                      العرض (سم)
+                    </label>
+                    <input
+                      type="number"
+                      value={dimensions.width}
+                      onChange={(e) =>
+                        setDimensions({ ...dimensions, width: e.target.value })
+                      }
+                      style={{
+                        ...inputStyle,
+                        border: dimensionsError.width ? "1px solid red" : "1px solid #ddd"
+                      }}
+                      placeholder="أدخل العرض (مثال: 15.75)"
+                    />
+                    {dimensionsError.width && (
+                      <span style={{ color: "red", fontSize: "12px" }}>
+                        {dimensionsError.width}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: "5px",
+                        fontWeight: "500",
+                      }}
+                    >
+                      الارتفاع (سم)
+                    </label>
+                    <input
+                      type="number"
+                      value={dimensions.height}
+                      onChange={(e) =>
+                        setDimensions({ ...dimensions, height: e.target.value })
+                      }
+                      style={{
+                        ...inputStyle,
+                        border: dimensionsError.height ? "1px solid red" : "1px solid #ddd"
+                      }}
+                      placeholder="أدخل الارتفاع (مثال: 8.25)"
+                    />
+                    {dimensionsError.height && (
+                      <span style={{ color: "red", fontSize: "12px" }}>
+                        {dimensionsError.height}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: "5px",
+                        fontWeight: "500",
+                      }}
+                    >
+                      المقاس
+                    </label>
+                    <input
+                      type="number"
+                      value={dimensions.size}
+                      onChange={(e) =>
+                        setDimensions({ ...dimensions, size: e.target.value })
+                      }
+                      style={{
+                        ...inputStyle,
+                        border: dimensionsError.size ? "1px solid red" : "1px solid #ddd"
+                      }}
+                      placeholder="أدخل المقاس"
+                    />
+                    {dimensionsError.size && (
+                      <span style={{ color: "red", fontSize: "12px" }}>
+                        {dimensionsError.size}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: "15px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontWeight: "500",
+                    }}
+                  >
+                    المرفقات
+                  </label>
+                  <div
+                    className="img-pdf"
+                    style={{
+                      border: fileError ? "1px dashed red" : "1px dashed #ccc",
+                      padding: "10px",
+                      borderRadius: "6px",
+                      textAlign: "center",
+                      transition: "all 0.3s",
+                    }}
+                  >
+                    <input
+                      type="file"
+                      id="file-upload"
+                      style={{ display: "none" }}
+                      accept=".jpg,.jpeg,.png,.gif,.bmp,.pdf"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        setSelectedFile(file);
+                        validateFile(file);
+                      }}
+                    />
+                    <label htmlFor="file-upload" style={{ cursor: "pointer" }}>
+                      <i
+                        className="fa-solid fa-upload"
+                        style={{ marginLeft: "5px" }}
+                      ></i>
+                      {selectedFile
+                        ? selectedFile.name
+                        : "رفع ملف (صور: JPG, PNG, GIF, BMP - مستندات: PDF)"}
+                    </label>
+                    {fileError && (
+                      <div style={{ color: "red", fontSize: "12px", marginTop: "5px" }}>
+                        {fileError}
+                      </div>
+                    )}
+                    <div style={{ fontSize: "11px", color: "#666", marginTop: "5px" }}>
+                      الحد الأقصى للحجم: 10 ميجابايت
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontWeight: "500",
+                    }}
+                  >
+                    ملاحظات إضافية
+                  </label>
+                  <textarea
+                    placeholder="أضف ملاحظاتك هنا"
+                    rows="4"
+                    value={note}
+                    onChange={(e) => {
+                      setNote(e.target.value);
+                      if (e.target.value.trim().length >= 5) {
+                        setNoteError("");
+                      }
+                    }}
+                    style={{
+                      width: "100%",
+                      borderRadius: "6px",
+                      border: `1px solid ${noteError ? "red" : "#ddd"}`,
+                      padding: "10px",
+                      fontFamily: "inherit",
+                      fontSize: "14px",
+                      resize: "none",
+                      boxShadow: "inset 0 1px 3px rgba(0,0,0,0.1)",
+                    }}
+                  ></textarea>
+                </div>
+                
               </div>
+              {noteError && (
+                <p style={{ color: "red", marginTop: "5px", fontSize: "14px" }}>
+                  {noteError}
+                </p>
+              )}
+              <button
+                className="review"
+                style={{
+                  marginTop: "15px",
+                  background: "var(--primary-color)",
+                  color: "#fff",
+                  border: "none",
+                  padding: "10px 20px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "16px",
+                  width: "100%",
+                }}
+                onClick={() => {
+                  const trimmedNote = note.trim();
+
+                  // التحقق من الحقول
+                  if (!validateFields()) {
+                    return; // إذا كان فيه خطأ في الحقول، ما نكملش
+                  }
+
+                  if (trimmedNote.length === 0) {
+                    setNoteError("لا يمكن ارسال الملاحظة فارغة.");
+                    return;
+                  }
+                  if (trimmedNote.length < 5) {
+                    setNoteError("الملاحظة يجب أن تكون 5 أحرف على الأقل.");
+                    return;
+                  }
+
+                  setNoteError(""); // Clear error on success
+                  const notes = JSON.parse(
+                    localStorage.getItem("cartNotes") || "{}"
+                  );
+                  notes[product.id] = note;
+                  localStorage.setItem("cartNotes", JSON.stringify(notes));
+                  setNote(""); // تفريغ حقل الملاحظة بعد الإرسال
+                  
+                  // تفريغ الحقول بعد الإرسال
+                  setDimensions({
+                    length: "",
+                    width: "",
+                    height: "",
+                    size: "",
+                  });
+                  setSelectedFile(null);
+                  setFileError("");
+
+                  // إغلاق النافذة بعد الحفظ
+                  const modal = document.getElementById("noteModal");
+                  if (modal) modal.style.display = "none";
+
+                  // إظهار رسالة النجاح
+                  setShowSuccessMessage(true);
+                  // إخفاء الرسالة بعد 3 ثوانٍ
+                  setTimeout(() => {
+                    setShowSuccessMessage(false);
+                  }, 3000);
+                }}
+              >
+                إرسال
+              </button>
             </div>
-            {noteError && (
-              <p style={{ color: "red", marginTop: "5px", fontSize: "14px" }}>
-                {noteError}
-              </p>
-            )}
-            <button
-              className="review"
-              style={{
-                marginTop: "15px",
-                background: "var(--primary-color)",
-                color: "#fff",
-                border: "none",
-                padding: "10px 20px",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "16px",
-                width: "100%",
-              }}
-              onClick={() => {
-                const trimmedNote = note.trim();
-                if (trimmedNote.length === 0) {
-                  setNoteError("لا يمكن ارسال الملاحظة فارغة.");
-                  return;
-                }
-                if (trimmedNote.length < 5) {
-                  setNoteError("الملاحظة يجب أن تكون 5 أحرف على الأقل.");
-                  return;
-                }
-                setNoteError(""); // Clear error on success
-                const notes = JSON.parse(
-                  localStorage.getItem("cartNotes") || "{}"
-                );
-                notes[product.id] = note;
-                localStorage.setItem("cartNotes", JSON.stringify(notes));
-                setNote(""); // تفريغ حقل الملاحظة بعد الإرسال
-                // إغلاق النافذة بعد الحفظ
-                const modal = document.getElementById("noteModal");
-                if (modal) modal.style.display = "none";
-                // إظهار رسالة النجاح
-                setShowSuccessMessage(true);
-                // إخفاء الرسالة بعد 3 ثوانٍ
-                setTimeout(() => {
-                  setShowSuccessMessage(false);
-                }, 3000);
-              }}
-            >
-              إرسال الملاحظة
-            </button>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
     </>
   );
 }
