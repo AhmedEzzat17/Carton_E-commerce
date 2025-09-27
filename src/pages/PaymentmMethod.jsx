@@ -96,7 +96,7 @@ const PaymentmMethod = () => {
         });
       }
 
-      setOrderSuccessMsg("تم إضافة الطلب بنجاح 🎉 سيتم التواصل معك قريبًا!");
+      setOrderSuccessMsg("تم إضافة الطلب بنجاح سيتم التواصل معك قريبًا!");
 
       // مسح السلة والملاحظات بعد نجاح العملية
       localStorage.removeItem("cartItems");
@@ -236,14 +236,34 @@ const PaymentmMethod = () => {
   useEffect(() => {
     if (cashStep === 2) {
       window.scrollTo(0, 0);
-      // تم إلغاء التحويل التلقائي بعد 3 ثواني بناءً على طلبك
+      const timer = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            navigate('/');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
     }
   }, [cashStep, navigate]);
 
   useEffect(() => {
     if (bankStep === 1) {
       window.scrollTo(0, 0);
-      // تم إلغاء التحويل التلقائي بعد 3 ثواني بناءً على طلبك
+      const timer = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            navigate('/');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
     }
   }, [bankStep, navigate]);
 
