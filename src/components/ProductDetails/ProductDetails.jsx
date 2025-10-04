@@ -378,7 +378,7 @@ export default function ProductDetails({ product }) {
                   ))}
 
               {/* رابط نصي لفتح نافذة الملاحظة */}
-              {inCart ? (
+              {/* {inCart ? (
                 <div
                   className="note-text-link"
                   style={{
@@ -415,7 +415,7 @@ export default function ProductDetails({ product }) {
                 >
                   لإضافه طلب خاص للبائع تخص الطلب،أضف المنتج إلى السلة أولاً
                 </div>
-              )}
+              )} */}
             </div>
 
             {/* زر السلة ديناميكي */}

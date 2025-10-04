@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useContext, useCallback } from "react";
 import debounce from "lodash.debounce";
-import productService from "../../services/interface/productService";
+import axios from "axios";
 import { Link } from "react-router-dom";
 import { Modal, Tab, Nav, Dropdown, Button } from "react-bootstrap";
 import logoImg from "../../assets/images/resize_image_686fe7da13ce4.png";
@@ -21,9 +21,11 @@ const Navbar = () => {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const searchContainerRef = useRef(null);
   const [showCart, setShowCart] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("user"));
   const [isScrolled, setIsScrolled] = useState(false);
+  const [activeNavItem, setActiveNavItem] = useState('الصفحة الرئيسية');
 
   const { cartItems, wishlistItems, addToCart, removeFromWishlist } =
     useContext(CartWishlistContext);
@@ -33,22 +35,47 @@ const Navbar = () => {
   useEffect(() => {
     async function fetchCategories() {
       try {
-        // غيّر الرابط حسب الـ endpoint الخاص بالفئات في مشروعك
-        const res = await productService.get({
-          withAuth: false,
-          params: { type: "categories" },
+        // استخدام axios مباشرة بدلاً من productService
+        const response = await axios.get(`https://myappapi.fikriti.com/api/v1/interface/products`, {
+          params: {
+            type: "categories"
+          },
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
         });
-        console.log("API Response:", res.data);
-        if (res.data?.status && Array.isArray(res.data.data?.data)) {
-          setCategories(res.data.data.data);
+
+        console.log("API Response:", response.data);
+        if (response.data?.status && Array.isArray(response.data.data?.data)) {
+          setCategories(response.data.data.data);
         } else {
           setCategories([]);
         }
-      } catch {
+      } catch (error) {
+        console.error("Categories fetch error:", error);
         setCategories([]);
       }
     }
     fetchCategories();
+  }, []);
+
+  // تحديد العنصر النشط بناءً على المسار الحالي
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+    const currentHash = window.location.hash;
+
+    if (currentPath === '/' && !currentHash) {
+      setActiveNavItem('الصفحة الرئيسية');
+    } else if (currentHash === '#one') {
+      setActiveNavItem('ما نزل مؤخرأ');
+    } else if (currentHash === '#categories') {
+      setActiveNavItem('الأقسام');
+    } else if (currentHash === '#faq-section-wrapper') {
+      setActiveNavItem('الأسئلة الشائعة');
+    } else {
+      setActiveNavItem('الصفحة الرئيسية'); // افتراضي
+    }
   }, []);
 
   useEffect(() => {
@@ -104,20 +131,41 @@ const Navbar = () => {
         setShowSuggestions(false);
         return;
       }
-      // Fetch products from the API
+      // Fetch products from the API using the new endpoint
       try {
-        const res = await productService.get({
-          withAuth: false,
-          params: { search: query },
+        const response = await axios.get(`https://myappapi.fikriti.com/api/v1/interface/products`, {
+          params: {
+            search: query,
+            perPage: 10
+          },
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
         });
-        if (res.data?.status && Array.isArray(res.data.data?.data)) {
-          setSearchSuggestions(res.data.data.data);
+
+        if (response.data?.status && response.data?.data?.data) {
+          const products = response.data.data.data.map(product => ({
+            id: product.id,
+            name: product.name,
+            slug: product.slug,
+            price: product.price,
+            main_image: product.images ? `https://myappapi.fikriti.com/${product.images}` : null,
+            images: product.productimages && product.productimages.length > 0
+              ? product.productimages.map(img => ({
+                  full_url: `https://myappapi.fikriti.com/${img.url}`,
+                  alt: img.alt_text
+                }))
+              : []
+          }));
+          setSearchSuggestions(products);
         } else {
           setSearchSuggestions([]);
         }
         setShowSuggestions(true);
         setIsSearchExpanded(true);
-      } catch {
+      } catch (error) {
+        console.error('Search API Error:', error);
         setSearchSuggestions([]);
         setShowSuggestions(false);
       }
@@ -191,14 +239,31 @@ const Navbar = () => {
     };
   }, []);
 
-  // دالة إغلاق القائمة الجانبية
-  const closeSidebar = () => {
+  // دالة إغلاق القائمة الجانبية وتحديث العنصر النشط
+  const closeSidebar = (navItem = null) => {
     const offcanvasElement = document.getElementById('bdNavbar');
     if (offcanvasElement) {
       const offcanvas = window.bootstrap?.Offcanvas?.getInstance(offcanvasElement);
       if (offcanvas) {
         offcanvas.hide();
       }
+    }
+    // تحديث العنصر النشط إذا تم تمرير اسم العنصر
+    if (navItem) {
+      setActiveNavItem(navItem);
+    }
+  };
+
+  // دالة إغلاق القائمة المنسدلة للمستخدم
+  const closeUserDropdown = () => {
+    setShowUserDropdown(false);
+  };
+
+  // دالة إغلاق القائمة المخصصة للمستخدم
+  const closeCustomDropdown = () => {
+    const menu = document.querySelector('.user-dropdown-custom');
+    if (menu) {
+      menu.classList.remove('show');
     }
   };
   const handleLogoutClick = (e) => {
@@ -394,22 +459,22 @@ const Navbar = () => {
                   className="navbar-nav text-uppercase justify-content-start justify-content-lg-start align-items-start align-items-lg-center flex-grow-1"
                 >
                   <li className="nav-item">
-                    <a className="nav-link me-3 active" href="/" onClick={closeSidebar}>
+                    <a className={`nav-link me-3 ${activeNavItem === 'الصفحة الرئيسية' ? 'active' : ''}`} href="/" onClick={() => closeSidebar('الصفحة الرئيسية')}>
                       الصفحة الرئيسية
                     </a>
                   </li>
                   <li className="nav-item">
-                    <a className="nav-link me-3" href="/#one" onClick={closeSidebar}>
+                    <a className={`nav-link me-3 ${activeNavItem === 'ما نزل مؤخرأ' ? 'active' : ''}`} href="/#one" onClick={() => closeSidebar('ما نزل مؤخرأ')}>
                       ما نزل مؤخرأ
                     </a>
                   </li>
                   <li className="nav-item">
-                    <a className="nav-link me-3" href="/#categories" onClick={closeSidebar}>
+                    <a className={`nav-link me-3 ${activeNavItem === 'الأقسام' ? 'active' : ''}`} href="/#categories" onClick={() => closeSidebar('الأقسام')}>
                       الأقسام
                     </a>
                   </li>
                   <li className="nav-item">
-                    <a className="nav-link me-3" href="/#faq-section-wrapper" onClick={closeSidebar}>
+                    <a className={`nav-link me-3 ${activeNavItem === 'الأسئلة الشائعة' ? 'active' : ''}`} href="/#faq-section-wrapper" onClick={() => closeSidebar('الأسئلة الشائعة')}>
                     الأسئلة الشائعة
                     </a>
                   </li>
@@ -547,8 +612,7 @@ const Navbar = () => {
                                       item.main_image ||
                                       (Array.isArray(item.images) &&
                                         item.images[0]?.full_url) ||
-                                      (typeof item.images === "string" &&
-                                      item.images
+                                      (typeof item.images === "string" && item.images
                                         ? `https://myappapi.fikriti.com/${item.images}`
                                         : "https://via.placeholder.com/32x32?text=No+Image")
                                     }
@@ -859,7 +923,7 @@ const Navbar = () => {
                               </span>
                             </div>
                             <div className="user-dropdown-divider"></div>
-                            <Link className="user-dropdown-item" to="/Profile" onClick={() => window.scrollTo(0, 0)}>
+                            <Link className="user-dropdown-item" to="/Profile" onClick={() => { window.scrollTo(0, 0); closeCustomDropdown(); closeUserDropdown(); closeSidebar(); }}>
                               <i className="bx bx-user"></i> الملف الشخصي
                             </Link>
                             {/* <Link className="user-dropdown-item" to="/orders">
@@ -871,7 +935,7 @@ const Navbar = () => {
                             <div className="user-dropdown-divider"></div>
                             <button 
                               className="user-dropdown-item text-danger"
-                              onClick={handleLogoutClick}
+                              onClick={(e) => { handleLogoutClick(e); closeCustomDropdown(); closeUserDropdown(); closeSidebar(); }}
                             >
                               <i className="bx bx-log-out"></i> تسجيل خروج
                             </button>
@@ -897,20 +961,22 @@ const Navbar = () => {
             {!isScrolled && (
               <li className="pe-1 logn user-icon-normal">
                 {isLoggedIn ? (
-                  <Dropdown className="user-dropdown-nav" align="end">
+                  <Dropdown className="user-dropdown-nav" align="end" show={showUserDropdown} onToggle={setShowUserDropdown}>
                     <Dropdown.Toggle as="a" href="#" className="p-0" style={{background: 'none', border: 'none'}}>
                       <span>
                         <i className="bx bx-user" style={{ fontSize: "25px" }}></i>
                       </span>
                     </Dropdown.Toggle>
                     <Dropdown.Menu className="user-dropdown-menu">
-                      <Dropdown.Item as={Link} to="/Profile" onClick={() => window.scrollTo(0, 0)}>
+                      <Dropdown.Item as={Link} to="/Profile" onClick={() => { window.scrollTo(0, 0); closeUserDropdown(); closeSidebar(); }}>
                         <i className="bx bx-user me-2"></i> الملف الشخصي
                       </Dropdown.Item>
                       <Dropdown.Divider />
                       <Dropdown.Item onClick={(e) => {
                         e.preventDefault();
                         setShowLogoutModal(true);
+                        closeUserDropdown();
+                        closeSidebar();
                       }} className="text-danger">
                         <i className="bx bx-log-out me-2"></i> تسجيل الخروج
                       </Dropdown.Item>
@@ -1184,7 +1250,7 @@ const Navbar = () => {
 
                   <ul
                     className="list-group mb-3"
-                    style={{ maxHeight: "260px", overflowY: "auto" }}
+                    style={{ maxHeight: "260px", overflowX: "auto" }}
                   >
                     {cartItems.length === 0 ? (
                       <li className="list-group-item text-center">
@@ -1499,7 +1565,7 @@ const Navbar = () => {
 
         @media (max-width: 600px) {
           .dropdown-menu-mobile.p-3 {
-            min-width: 90vw;
+            min-width: 79vw;
             max-width: 85vw;
             padding: 6px 2px;
           }
