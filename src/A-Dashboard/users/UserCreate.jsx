@@ -104,9 +104,9 @@ export default function UserCreate() {
         <div className="row justify-content-center">
           <div className="col-md-10">
             <div className="card shadow border-0 rounded-4">
-              <div className="card-header bg-primary text-white rounded-top-4">
+              <div className="card-header text-white rounded-top-4" style={{ backgroundColor: "var(--primary-color)" }}>
                 <h4 className="mb-0">
-                  <i className="bi bi-plus-circle me-2"></i> إضافة مستخدم جديد
+                  <i className="bi bi-plus-circle me-2" style={{ color: "white" }}></i> إضافة مستخدم جديد
                 </h4>
               </div>
               <div className="card-body bg-light">
@@ -259,10 +259,10 @@ export default function UserCreate() {
 
                   <div className="d-flex justify-content-between">
                     <Link to="/Dashboard/users" className="btn btn-secondary">
-                      <i className="bi bi-arrow-right me-1"></i> رجوع
+                      <i className="bi bi-arrow-right me-1" style={{ color: "white" }}></i> رجوع
                     </Link>
-                    <button type="submit" className="btn btn-primary">
-                      <i className="bi bi-check-circle me-1"></i> حفظ المستخدم
+                    <button type="submit" className="btn" style={{ backgroundColor: "var(--primary-color)", color: "white" }}>
+                      <i className="bi bi-check-circle me-1" style={{ color: "white" }}></i> حفظ المستخدم
                     </button>
                   </div>
                 </form>

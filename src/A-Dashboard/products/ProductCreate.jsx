@@ -499,9 +499,9 @@ export default function ProductCreate() {
       <div className="row justify-content-center">
         <div className="col-md-10">
           <div className="card border-0 shadow-lg">
-            <div className="card-header bg-primary text-white py-3">
+            <div className="card-header text-white py-3" style={{ backgroundColor: "var(--primary-color)" }}>
               <div className="d-flex justify-content-between align-items-center">
-                <h3 className="mb-0 fw-bold border-bottom pb-2">
+                <h3 className="mb-0 fw-bold border-bottom pb-2 text-white">
                   إضافة منتج جديد
                 </h3>
                 <Link
@@ -535,7 +535,7 @@ export default function ProductCreate() {
                 <div className="row g-3">
                   <div className="col-md-8">
                     <div className="card border-0 shadow-sm p-3 bg-white">
-                      <h5 className="text-primary border-bottom pb-2">
+                      <h5 className="border-bottom pb-2" style={{ color: "var(--primary-color)" }}>
                         معلومات المنتج
                       </h5>
                       <div className="mb-3">
@@ -642,7 +642,7 @@ export default function ProductCreate() {
                   <div className="col-md-4">
                     <div className="card border-0 shadow-sm p-3 mt-3 bg-white">
                       <div className="d-flex justify-content-between align-items-center border-bottom pb-2">
-                        <h5 className="text-primary">الصورة الأساسية</h5>
+                        <h5 className="" style={{ color: "var(--primary-color)" }}>الصورة الأساسية</h5>
                       </div>
                       <div className="mt-3 text-center">
                         {formData.main_image ? (
@@ -717,7 +717,7 @@ export default function ProductCreate() {
                       <div className="col-md-6">
                         <div className="card border-0 shadow-sm p-3 mt-3 bg-white">
                           <div className="d-flex justify-content-between align-items-center border-bottom pb-2">
-                            <h5 className="text-primary">المميزات الرئيسية</h5>
+                            <h5 className="" style={{color: "var(--primary-color)"}}>المميزات الرئيسية</h5>
                           </div>
                           <div className="mt-3">
                             <textarea
@@ -734,7 +734,7 @@ export default function ProductCreate() {
                       <div className="col-md-6">
                         <div className="card border-0 shadow-sm p-3 mt-3 bg-white">
                           <div className="d-flex justify-content-between align-items-center border-bottom pb-2">
-                            <h5 className="text-primary">تفاصيل إضافية</h5>
+                            <h5 className="" style={{color: "var(--primary-color)"}}>تفاصيل إضافية</h5>
                           </div>
                           <div className="mt-3">
                             <textarea
@@ -752,7 +752,7 @@ export default function ProductCreate() {
 
                     <div className="card border-0 shadow-sm p-3 mt-3 bg-white">
                       <div className="section-header">
-                        <h5 className="text-primary">التسعير</h5>
+                        <h5 className="" style={{color: "var(--primary-color)"}}>التسعير</h5>
                         <button
                           type="button"
                           className="btn btn-light btn-sm toggle-section"
@@ -850,7 +850,7 @@ export default function ProductCreate() {
 
                     <div className="card border-0 shadow-sm p-3 mt-3 bg-white">
                       <div className="section-header">
-                        <h5 className="text-primary">الصور</h5>
+                        <h5 className="" style={{color: "var(--primary-color)"}}>الصور</h5>
                         <div className="d-flex gap-2">
                           <button
                             type="button"
@@ -917,7 +917,7 @@ export default function ProductCreate() {
 
                     <div className="card border-0 shadow-sm p-3 mt-4 bg-white">
                       <div className="section-header">
-                        <h5 className="text-primary">🛠 المتغيرات</h5>
+                        <h5 className="" style={{color: "var(--primary-color)"}}>🛠 المتغيرات</h5>
                         <div className="d-flex gap-2">
                           <label className="switch">
                             <input
@@ -949,7 +949,7 @@ export default function ProductCreate() {
                       >
                         {!variantEnabled ? (
                           <div className="alert alert-warning text-center mt-2">
-                            <p>⚠️ المتغيرات غير مفعّلة، قم بتشغيلها أولًا.</p>
+                            <p> المتغيرات غير مفعّلة، قم بتشغيلها أولًا.</p>
                           </div>
                         ) : (
                           <div id="variantInputs">
@@ -1082,7 +1082,7 @@ export default function ProductCreate() {
                   <div className="col-md-4">
                     <div className="card border-0 shadow-sm p-3 mt-3 bg-white">
                       <div className="d-flex justify-content-between align-items-center border-bottom pb-2">
-                        <h5 className="text-primary">الوزن (كجم)</h5>
+                        <h5 className="" style={{ color :"var(--primary-color)" }} >الوزن (كجم)</h5>
                       </div>
                       <div className="mt-3">
                         <input
@@ -1100,7 +1100,7 @@ export default function ProductCreate() {
 
                     <div className="card border-0 shadow-sm p-3  mt-3 bg-white">
                       <div className="d-flex justify-content-between align-items-center border-bottom pb-2">
-                        <h5 className="text-primary">التصنيف</h5>
+                        <h5 className="" style={{ color :"var(--primary-color)" }}>التصنيف</h5>
                       </div>
                       <div className="search-container">
                         <input
@@ -1155,7 +1155,8 @@ export default function ProductCreate() {
                 <div className="d-grid mt-4">
                   <button
                     type="submit"
-                    className="btn btn-primary btn-lg rounded-pill fw-bold shadow"
+                    className="btn btn-lg rounded-pill fw-bold shadow"
+                    style={{ backgroundColor: "var(--primary-color)", color: "white" }}
                   >
                     <FontAwesomeIcon icon={faSave} className="me-2" /> حفظ
                     المنتج

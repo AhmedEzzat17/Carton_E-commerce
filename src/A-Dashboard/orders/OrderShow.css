@@ -63,7 +63,7 @@
 }
 
 .page-title i {
-  color: #3b82f6;
+  color: var(--primary-color);
   font-size: 2.2rem;
 }
 
@@ -105,7 +105,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #3b82f6, #10b981, #f59e0b);
+  background: linear-gradient(90deg, var(--primary-color), #10b981, #f59e0b);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -157,7 +157,7 @@
 }
 
 .stat-icon.processing {
-  background: linear-gradient(135deg, #3b82f6, #2563eb, #1d4ed8);
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color), var(--primary-color));
 }
 
 .stat-icon.delivered {
@@ -233,7 +233,7 @@
 
 .search-input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--primary-color);
   background: white;
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1),
     0 4px 12px rgba(59, 130, 246, 0.15);
@@ -241,7 +241,7 @@
 }
 
 .search-input:focus + .Osearch-box i {
-  color: #3b82f6;
+  color: var(--primary-color);
 }
 
 .search-input:hover {
@@ -287,8 +287,8 @@
 }
 
 .filter-btn:hover {
-  border-color: #3b82f6;
-  color: #3b82f6;
+  border-color: var(--primary-color);
+  color: var(--primary-color);
   background: white;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
@@ -299,8 +299,8 @@
 }
 
 .filter-btn.active {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  border-color: #3b82f6;
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  border-color: var(--primary-color);
   color: white;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
   transform: translateY(-1px);
@@ -378,7 +378,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, #3b82f6, #10b981, #f59e0b);
+  background: linear-gradient(90deg, var(--primary-color), #10b981, #f59e0b);
   opacity: 0.3;
 }
 
@@ -410,7 +410,7 @@
   top: 0;
   bottom: 0;
   width: 3px;
-  background: linear-gradient(180deg, #3b82f6, #10b981);
+  background: linear-gradient(180deg, var(--primary-color), #10b981);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -420,7 +420,7 @@
 }
 
 .order-id .id-badge {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
   color: white;
   padding: 8px 14px;
   border-radius: 10px;
@@ -489,7 +489,7 @@
 .status-processing {
   background: #dbeafe;
   color: #1e40af;
-  border: 1px solid #3b82f6;
+  border: 1px solid var(--primary-color);
 }
 
 .status-shipped {
@@ -498,7 +498,7 @@
   border: 1px solid #6366f1;
 }
 
-.status-delivered {
+.status-completed {
   background: #d1fae5;
   color: #065f46;
   border: 1px solid #10b981;
@@ -526,14 +526,15 @@
 }
 
 .details-btn1 {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
   color: white;
 }
 
 .details-btn1:hover {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  color: white;
 }
 
 /* Empty State */
@@ -575,7 +576,7 @@
   width: 48px;
   height: 48px;
   border: 4px solid #e2e8f0;
-  border-top: 4px solid #3b82f6;
+  border-top: 4px solid var(--primary-color);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 16px;
@@ -610,7 +611,7 @@
 }
 
 .retry-btn {
-  background: #3b82f6;
+  background: var(--primary-color);
   color: white;
   border: none;
   padding: 12px 24px;
@@ -622,7 +623,7 @@
 }
 
 .retry-btn:hover {
-  background: #2563eb;
+  background: var(--primary-color);
   transform: translateY(-1px);
 }
 
@@ -637,11 +638,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: white;
+  /* background: white; */
   padding: 8px;
   border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  /* box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); */
+  /* border: 1px solid #e2e8f0; */
 }
 
 .pagination-btn {
@@ -660,8 +661,8 @@
 }
 
 .pagination-btn:hover:not(:disabled) {
-  border-color: #3b82f6;
-  color: #3b82f6;
+  border-color: var(--primary-color);
+  color: var(--primary-color);
 }
 
 .pagination-btn:disabled {
@@ -691,13 +692,13 @@
 }
 
 .pagination-number:hover {
-  border-color: #3b82f6;
-  color: #3b82f6;
+  border-color: var(--primary-color);
+  color: var(--primary-color);
 }
 
 .pagination-number.active {
-  background: #3b82f6;
-  border-color: #3b82f6;
+  background: var(--primary-color);
+  border-color: var(--primary-color);
   color: white;
 }
 

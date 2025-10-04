@@ -86,14 +86,13 @@ const PaymentmMethod = () => {
         // الملف
         formData.append("payment_receipt", bankImage);
 
-        await orderService.post(formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        // إرسال الطلب مع FormData
+        const response = await orderService.createOrder(formData);
+        console.log('✅ تم إرسال الطلب بنجاح (FormData):', response);
       } else {
-        // ⬅️ الدفع عند الاستلام → JSON عادي
-        await orderService.post(orderData, {
-          headers: { "Content-Type": "application/json" },
-        });
+        // الدفع عند الاستلام → JSON عادي
+        const response = await orderService.createOrder(orderData);
+        console.log('✅ تم إرسال الطلب بنجاح (JSON):', response);
       }
 
       setOrderSuccessMsg("تم إضافة الطلب بنجاح سيتم التواصل معك قريبًا!");
@@ -240,7 +239,10 @@ const PaymentmMethod = () => {
         setCountdown(prev => {
           if (prev <= 1) {
             clearInterval(timer);
-            navigate('/');
+            // تأخير التنقل لتجنب مشكلة التحديث أثناء الرندر
+            setTimeout(() => {
+              navigate('/');
+            }, 100);
             return 0;
           }
           return prev - 1;

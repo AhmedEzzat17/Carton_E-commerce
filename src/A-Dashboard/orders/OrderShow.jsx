@@ -1,75 +1,195 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { FaSync } from 'react-icons/fa';
 import orderService from "../../services/orderService";
 import "./OrderShow.css";
 
 const OrderShow = () => {
   const [orders, setOrders] = useState([]);
+  const [allOrders, setAllOrders] = useState([]); // جميع الطلبات الأصلية
+  const [filteredOrders, setFilteredOrders] = useState([]); // الطلبات بعد الفلترة
+  const [displayedOrders, setDisplayedOrders] = useState([]); // الطلبات المعروضة في الصفحة الحالية
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalOrders, setTotalOrders] = useState(0); // العدد الإجمالي للطلبات
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const ITEMS_PER_PAGE = 10; // عدد الطلبات في كل صفحة
+  const [lastFetchTime, setLastFetchTime] = useState(0); // لتجنب التحديثات المتكررة
 
-  // Fetch orders from API
-  const fetchOrders = async (page = 1, search = "", status = "all") => {
+  // Fetch orders from API - محسن للأداء
+  const fetchOrders = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await orderService.getWithPagination(page, search);
-
-      console.log("📦 Full API Response:", response); // اطبع الاستجابة كلها
-      console.log("📦 Orders Data:", response.data?.data?.data); // اطبع Array الطلبات
+      const response = await orderService.getWithPagination(1, "");
+      // تقليل console logs لتحسين الأداء
+      // console.log("📦 Full API Response:", response);
+      // console.log("📦 Orders Data:", response.data?.data?.data);
 
       if (response.data && response.data.data) {
-        let paginated = response.data.data; // ده فيه current_page, last_page, data[]
-
-        let filteredOrders = Array.isArray(paginated.data)
+        let paginated = response.data.data;
+        let fetchedOrders = Array.isArray(paginated.data)
           ? paginated.data
           : [];
 
-        // Apply status filter
-        if (status !== "all") {
-          filteredOrders = filteredOrders.filter(
-            (order) => order.status?.toLowerCase() === status.toLowerCase()
-          );
-        }
+        // حفظ العدد الإجمالي من API response
+        const total = paginated.total || fetchedOrders.length;
+        setTotalOrders(total);
+        
+        console.log(`📊 Total Orders: ${total}, Current Page Orders: ${fetchedOrders.length}`);
 
-        setOrders(filteredOrders);
-        setTotalPages(paginated.last_page || 1);
-        setCurrentPage(paginated.current_page || 1);
+        setAllOrders(fetchedOrders);
+        setFilteredOrders(fetchedOrders);
+        
+        const pages = Math.ceil(fetchedOrders.length / ITEMS_PER_PAGE);
+        setTotalPages(pages);
+        
+        // عرض الصفحة الأولى
+        setDisplayedOrders(fetchedOrders.slice(0, ITEMS_PER_PAGE));
+        setLastFetchTime(Date.now()); // حفظ وقت آخر تحديث
       } else {
-        setOrders([]);
-        setTotalPages(1);
-        setCurrentPage(1);
+        setAllOrders([]);
+        setFilteredOrders([]);
+        setDisplayedOrders([]);
+        setTotalOrders(0);
       }
     } catch (err) {
       console.error(" Error fetching orders:", err);
       setError("حدث خطأ في تحميل الطلبات");
-      setOrders([]);
-      setTotalPages(1);
-      setCurrentPage(1);
+      setAllOrders([]);
+      setFilteredOrders([]);
+      setDisplayedOrders([]);
+      setTotalOrders(0);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchOrders(currentPage, searchTerm, filterStatus);
-  }, [currentPage, searchTerm, filterStatus]);
+  const refreshOrders = async (forceRefresh = false) => {
+    // تجنب التحديثات المتكررة - إلا إذا كان المستخدم يضغط على الزر
+    const now = Date.now();
+    if (!forceRefresh && now - lastFetchTime < 30000) {
+      console.log('تم تجاهل التحديث - تم التحديث مؤخراً');
+      return;
+    }
 
-  // Handle search
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1);
+    console.log('🔄 بدء تحديث الطلبات...');
+
+    // إضافة timeout لتجنب التعليق
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Request timeout')), 10000)
+    );
+    
+    try {
+      await Promise.race([fetchOrders(), timeoutPromise]);
+      console.log('✅ تم تحديث الطلبات بنجاح');
+    } catch (error) {
+      console.error('Refresh timeout or error:', error);
+      setError('انتهت مهلة الاتصال - يرجى المحاولة مرة أخرى');
+      setLoading(false);
+    }
   };
 
-  // Handle status filter
+  // تحديث تلقائي عند التركيز على النافذة - معطل لتحسين الأداء
+  // useEffect(() => {
+  //   const handleFocus = () => {
+  //     refreshOrders();
+  //   };
+
+  //   window.addEventListener('focus', handleFocus);
+  //   return () => window.removeEventListener('focus', handleFocus);
+  // }, []);
+
+  // مستمع للأحداث المخصصة - محسن للأداء
+  useEffect(() => {
+    let refreshTimeout;
+    
+    const handleNewOrder = () => {
+      // تأخير التحديث لتجنب التحديثات المتكررة
+      clearTimeout(refreshTimeout);
+      refreshTimeout = setTimeout(() => {
+        refreshOrders();
+      }, 1000); // تأخير ثانية واحدة
+    };
+
+    const handleOrderUpdate = () => {
+      clearTimeout(refreshTimeout);
+      refreshTimeout = setTimeout(() => {
+        refreshOrders();
+      }, 1000);
+    };
+
+    window.addEventListener('newOrderAdded', handleNewOrder);
+    window.addEventListener('ordersUpdated', handleOrderUpdate);
+
+    return () => {
+      clearTimeout(refreshTimeout);
+      window.removeEventListener('newOrderAdded', handleNewOrder);
+      window.removeEventListener('ordersUpdated', handleOrderUpdate);
+    };
+  }, []);
+
+  // تحميل أولي للطلبات - مرة واحدة فقط
+  useEffect(() => {
+    fetchOrders();
+  }, []); // مصفوفة فارغة = تشغيل مرة واحدة فقط
+
+  // فلترة محلية - بدون API calls
+  useEffect(() => {
+    let filtered = [...allOrders];
+
+    // فلتر حسب البحث
+    if (searchTerm.trim() !== "") {
+      filtered = filtered.filter((order) => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          order.order_number?.toLowerCase().includes(searchLower) ||
+          order.id?.toString().includes(searchLower) ||
+          order.user?.name?.toLowerCase().includes(searchLower) ||
+          order.user?.email?.toLowerCase().includes(searchLower)
+        );
+      });
+    }
+
+    // فلتر حسب الحالة
+    if (filterStatus !== "all") {
+      filtered = filtered.filter(
+        (order) => order.status?.toLowerCase() === filterStatus.toLowerCase()
+      );
+    }
+
+    setFilteredOrders(filtered);
+    
+    // حساب عدد الصفحات بعد الفلترة
+    const pages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+    setTotalPages(pages);
+    
+    // الرجوع للصفحة الأولى عند تغيير الفلتر
+    setCurrentPage(1);
+    
+    // عرض الصفحة الأولى
+    setDisplayedOrders(filtered.slice(0, ITEMS_PER_PAGE));
+  }, [searchTerm, filterStatus, allOrders, ITEMS_PER_PAGE]);
+
+  // تحديث الطلبات المعروضة عند تغيير الصفحة
+  useEffect(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    setDisplayedOrders(filteredOrders.slice(startIndex, endIndex));
+  }, [currentPage, filteredOrders, ITEMS_PER_PAGE]);
+
+  // Handle search - محلي بدون API
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  // Handle status filter - محلي بدون API
   const handleStatusFilter = (status) => {
     setFilterStatus(status);
-    setCurrentPage(1);
   };
 
   // Get status badge class
@@ -81,8 +201,8 @@ const OrderShow = () => {
         return "status-processing";
       case "shipped":
         return "status-shipped";
-      case "delivered":
-        return "status-delivered";
+      case "completed":
+        return "status-completed";
       case "cancelled":
         return "status-cancelled";
       default:
@@ -99,8 +219,8 @@ const OrderShow = () => {
         return "قيد المعالجة";
       case "shipped":
         return "تم الشحن";
-      case "delivered":
-        return "تم التسليم";
+      case "completed":
+        return "مكتمل";
       case "cancelled":
         return "ملغي";
       default:
@@ -179,7 +299,7 @@ const OrderShow = () => {
               <div className="stat-info">
                 <span className="stat-number">
                   {
-                    (orders || []).filter(
+                    (allOrders || []).filter(
                       (o) => o.status?.toLowerCase() === "pending"
                     ).length
                   }
@@ -194,7 +314,7 @@ const OrderShow = () => {
               <div className="stat-info">
                 <span className="stat-number">
                   {
-                    (orders || []).filter(
+                    (allOrders || []).filter(
                       (o) => o.status?.toLowerCase() === "processing"
                     ).length
                   }
@@ -209,12 +329,12 @@ const OrderShow = () => {
               <div className="stat-info">
                 <span className="stat-number">
                   {
-                    (orders || []).filter(
-                      (o) => o.status?.toLowerCase() === "delivered"
+                    (allOrders || []).filter(
+                      (o) => o.status?.toLowerCase() === "completed"
                     ).length
                   }
                 </span>
-                <span className="stat-label">تم التسليم</span>
+                <span className="stat-label">مكتمل</span>
               </div>
             </div>
           </div>
@@ -267,23 +387,27 @@ const OrderShow = () => {
           </button>
           <button
             className={`filter-btn ${
-              filterStatus === "delivered" ? "active" : ""
+              filterStatus === "completed" ? "active" : ""
             }`}
-            onClick={() => handleStatusFilter("delivered")}
+            onClick={() => handleStatusFilter("completed")}
           >
-            تم التسليم
+            مكتمل
           </button>
         </div>
       </div>
-
 {/* Orders Table */}
 <div className="orders-table-container1">
-  <div className="table-header1">
+  <div className="table-header-with-refresh me-2 mt-2">
     <h3>قائمة الطلبات</h3>
-    <span className="orders-count">({(orders || []).length} طلب)</span>
+    <button className="refresh-btn-dashboard" onClick={() => refreshOrders(true)} disabled={loading}>
+      <FaSync className={loading ? 'fa-spin' : ''} />
+      تحديث
+    </button>
   </div>
-
-  {(orders || []).length === 0 ? (
+  <span className="orders-count me-2">
+    ({totalOrders > 0 ? `${totalOrders} طلب إجمالي` : `${(filteredOrders || []).length} طلب`})
+  </span>
+  {(displayedOrders || []).length === 0 ? (
     <div className="empty-state">
       <div className="empty-icon">
         <i className="bx bx-shopping-bag"></i>
@@ -304,7 +428,7 @@ const OrderShow = () => {
           </tr>
         </thead>
         <tbody>
-          {(orders || []).map((order) => (
+          {(displayedOrders || []).map((order) => (
             <tr key={order.id} className="order-row1">
               <td className="order-number1">
                 <span className="order-ref">{order.order_number}</span>
@@ -331,6 +455,7 @@ const OrderShow = () => {
                   to={`/Dashboard/orders/${order.id}`}
                   className="action-btn1 details-btn1"
                   title="عرض التفاصيل"
+                  onClick={() => window.scrollTo(0, 0)}
                 >
                   <i className="bx bx-show"></i>
                   تفاصيل
@@ -387,6 +512,39 @@ const OrderShow = () => {
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        .table-header-with-refresh {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 10px;
+        }
+
+        .refresh-btn-dashboard {
+          background: var(--primary-color);
+          color: white;
+          border: none;
+          border-radius: 6px;
+          padding: 6px 12px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          cursor: pointer;
+          font-size: 12px;
+          transition: all 0.3s ease;
+        }
+
+        .refresh-btn-dashboard:hover:not(:disabled) {
+          background: var(--primary-color);
+          transform: translateY(-1px);
+        }
+
+        .refresh-btn-dashboard:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      `}</style>
     </div>
   );
 };

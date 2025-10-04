@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import "../../assets/css/product.css";
 import { CartWishlistContext } from "../../App";
 import { useNavigate } from "react-router-dom";
+import specialOrderService from "../../services/specialOrderService";
 
 // Style for input fields
 const inputStyle = {
@@ -34,6 +35,7 @@ export default function ProductDetails({ product }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileError, setFileError] = useState("");
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { cartItems, addToCart, removeFromCart, addToWishlist } =
     useContext(CartWishlistContext);
   const navigate = useNavigate();
@@ -165,6 +167,90 @@ export default function ProductDetails({ product }) {
     return isValid;
   };
 
+  // إرسال الطلب الخاص إلى API
+  const submitSpecialOrder = async () => {
+    try {
+      setIsSubmitting(true);
+      
+      // التحقق من وجود المستخدم
+      const userData = localStorage.getItem('user');
+      if (!userData) {
+        alert('يرجى تسجيل الدخول أولاً لإرسال الطلب الخاص');
+        return;
+      }
+
+      const user = JSON.parse(userData);
+      const userId = user.user?.id || user.id;
+      
+      if (!userId) {
+        alert('خطأ في بيانات المستخدم، يرجى تسجيل الدخول مرة أخرى');
+        return;
+      }
+
+      // إعداد البيانات للإرسال
+      const orderData = {
+        product_id: product.id,
+        user_id: userId,
+        length: dimensions.length || '0',
+        width: dimensions.width || '0',
+        height: dimensions.height || '0',
+        size: dimensions.size || '',
+        note: note.trim()
+      };
+
+      console.log('📝 إرسال الطلب الخاص إلى API...');
+      console.log('البيانات المرسلة:', orderData);
+
+      // إرسال الطلب إلى API
+      let response;
+      if (selectedFile) {
+        // إذا كان هناك ملف مرفق، استخدم FormData
+        const formData = new FormData();
+        Object.keys(orderData).forEach(key => {
+          formData.append(key, orderData[key]);
+        });
+        formData.append('attachment_file', selectedFile);
+        
+        console.log('📎 إرسال مع ملف مرفق:', selectedFile.name);
+        response = await specialOrderService.createSpecialOrder(formData);
+      } else {
+        // إذا لم يكن هناك ملف، استخدم JSON
+        response = await specialOrderService.createSpecialOrder(orderData);
+      }
+      
+      console.log('✅ تم إرسال الطلب الخاص بنجاح:', response.data);
+      
+      return true;
+    } catch (error) {
+      console.error('❌ خطأ في إرسال الطلب الخاص:', error);
+      
+      let errorMessage = 'حدث خطأ في إرسال الطلب الخاص';
+      
+      if (error.response?.status === 422) {
+        console.log('📋 تفاصيل خطأ التحقق:', error.response.data);
+        const errors = error.response.data?.errors;
+        if (errors) {
+          errorMessage = 'أخطاء في البيانات:\n' + Object.values(errors).flat().join('\n');
+        } else if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+      } else if (error.response?.status === 401) {
+        errorMessage = 'غير مصرح لك، يرجى تسجيل الدخول مرة أخرى';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'خطأ في الخادم، يرجى المحاولة مرة أخرى';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <>
       {/* رسالة النجاح */}
@@ -204,7 +290,7 @@ export default function ProductDetails({ product }) {
                 strokeLinejoin="round"
               />
             </svg>
-            تم إرسال الملاحظة بنجاح
+            تم إرسال الطلب الخاص بنجاح
           </div>
         </div>
       )}
@@ -692,16 +778,18 @@ export default function ProductDetails({ product }) {
                 className="review"
                 style={{
                   marginTop: "15px",
-                  background: "var(--primary-color)",
+                  background: isSubmitting ? "#ccc" : "var(--primary-color)",
                   color: "#fff",
                   border: "none",
                   padding: "10px 20px",
                   borderRadius: "6px",
-                  cursor: "pointer",
+                  cursor: isSubmitting ? "not-allowed" : "pointer",
                   fontSize: "16px",
                   width: "100%",
+                  opacity: isSubmitting ? 0.7 : 1,
                 }}
-                onClick={() => {
+                disabled={isSubmitting}
+                onClick={async () => {
                   const trimmedNote = note.trim();
 
                   // التحقق من الحقول
@@ -719,36 +807,50 @@ export default function ProductDetails({ product }) {
                   }
 
                   setNoteError(""); // Clear error on success
-                  const notes = JSON.parse(
-                    localStorage.getItem("cartNotes") || "{}"
-                  );
-                  notes[product.id] = note;
-                  localStorage.setItem("cartNotes", JSON.stringify(notes));
-                  setNote(""); // تفريغ حقل الملاحظة بعد الإرسال
+
+                  // إرسال الطلب الخاص إلى API
+                  const success = await submitSpecialOrder();
                   
-                  // تفريغ الحقول بعد الإرسال
-                  setDimensions({
-                    length: "",
-                    width: "",
-                    height: "",
-                    size: "",
-                  });
-                  setSelectedFile(null);
-                  setFileError("");
+                  if (success) {
+                    // حفظ في localStorage كما هو (للتوافق مع النظام القديم)
+                    const notes = JSON.parse(
+                      localStorage.getItem("cartNotes") || "{}"
+                    );
+                    notes[product.id] = note;
+                    localStorage.setItem("cartNotes", JSON.stringify(notes));
+                    
+                    // تفريغ الحقول بعد الإرسال الناجح
+                    setNote("");
+                    setDimensions({
+                      length: "",
+                      width: "",
+                      height: "",
+                      size: "",
+                    });
+                    setSelectedFile(null);
+                    setFileError("");
 
-                  // إغلاق النافذة بعد الحفظ
-                  const modal = document.getElementById("noteModal");
-                  if (modal) modal.style.display = "none";
+                    // إغلاق النافذة بعد الحفظ
+                    const modal = document.getElementById("noteModal");
+                    if (modal) modal.style.display = "none";
 
-                  // إظهار رسالة النجاح
-                  setShowSuccessMessage(true);
-                  // إخفاء الرسالة بعد 3 ثوانٍ
-                  setTimeout(() => {
-                    setShowSuccessMessage(false);
-                  }, 3000);
+                    // إظهار رسالة النجاح
+                    setShowSuccessMessage(true);
+                    // إخفاء الرسالة بعد 3 ثوانٍ
+                    setTimeout(() => {
+                      setShowSuccessMessage(false);
+                    }, 3000);
+                  }
                 }}
               >
-                إرسال
+                {isSubmitting ? (
+                  <>
+                    <i className="fa fa-spinner fa-spin" style={{ marginLeft: "5px" }}></i>
+                    جاري الإرسال...
+                  </>
+                ) : (
+                  "إرسال"
+                )}
               </button>
             </div>
           </div>

@@ -17,6 +17,8 @@ import ProductEdit from "../A-Dashboard/products/ProductEdit";
 import ProductShow from "../A-Dashboard/products/ProductShow";
 import OrderShow from "../A-Dashboard/orders/OrderShow";
 import OrderDetails from "../A-Dashboard/orders/OrderDetails";
+import SpecialOrderShow from "../A-Dashboard/specialRequest/SpecialOrderShow";
+import SpecialOrderDetails from "../A-Dashboard/specialRequest/SpecialOrderDetails";
 import PaymentmMethod from "../pages/PaymentmMethod";
 import PrivateRoute from "./PrivateRoute";
 import ErrorPage from "../pages/ErrorPage";
@@ -76,6 +78,8 @@ const AppRoutes = () => (
         <Route path="products/edit/:id" element={<ProductEdit />} />
         <Route path="orders" element={<OrderShow />} />
         <Route path="orders/:id" element={<OrderDetails />} />
+        <Route path="special-orders" element={<SpecialOrderShow />} />
+        <Route path="special-orders/:id" element={<SpecialOrderDetails />} />
       </Route>
     </Route>
   </Routes>

@@ -147,6 +147,9 @@ const Navbar = () => {
     setShowSearchPopup(true);
   };
 
+
+  
+
   // إغلاق القائمة المنسدلة عند النقر في أي مكان بالصفحة
   useEffect(() => {
     const handleClickAnywhere = (event) => {
@@ -243,6 +246,9 @@ const Navbar = () => {
   );
 
   const [show, setShow] = useState(false);
+
+
+  
 
   return (
     <>
@@ -407,6 +413,14 @@ const Navbar = () => {
                     الأسئلة الشائعة
                     </a>
                   </li>
+
+                  {/* {!isLoggedIn ? null : (
+                    <li className="nav-item">
+                      <a className="nav-link me-3" href="#" onClick={handleLogoutClick}>
+                        تسجيل الخروج
+                      </a>
+                    </li>
+                  )} */}
 
                   {/* <Dropdown as="li" className="nav-item">
                     <Dropdown.Toggle
@@ -864,7 +878,7 @@ const Navbar = () => {
                           </div>
                         </div>
                       ) : (
-                        <a href="#" onClick={handleLoginClick} className="login-btn-custom">
+                        <a href="#" onClick={handleLoginClick} className="login-btn-custom d-none d-lg-inline-flex">
                           <span>تسجيل دخول</span>
                           <i className="bx bx-user"></i>
                         </a>
@@ -1243,6 +1257,7 @@ const Navbar = () => {
                 </Dropdown.Menu>
               </Dropdown>
             </li>
+            
           </ul>
         </div>
       </header>

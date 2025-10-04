@@ -75,7 +75,7 @@ const UserShow = () => {
   return (
     <div className="container mt-4" dir="rtl">
       <div className="row justify-content-center">
-        <h1 className="text-center mb-4 fw-bold text-primary">
+        <h1 className="text-center mb-4 fw-bold" style={{ color: "var(--primary-color)" }}>
           إدارة المستخدمين
         </h1>
         <div className="col-md-12">
@@ -84,7 +84,7 @@ const UserShow = () => {
           )}
 
           <div className="card shadow-lg border-0">
-            <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <div className="card-header text-white d-flex justify-content-between align-items-center" style={{ backgroundColor: "var(--primary-color)" }}>
               <h4 className="mb-0">قائمة المستخدمين</h4>
               <Link
                 to="/Dashboard/users/create"
@@ -98,7 +98,7 @@ const UserShow = () => {
               <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-2">
                 <button
                   onClick={printTable}
-                  className="btn btn-outline-dark btn-sm shadow-sm"
+                  className="btn btn-sm shadow-sm"
                 >
                   <i className="bi bi-printer"></i> طباعة
                 </button>
@@ -110,7 +110,7 @@ const UserShow = () => {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
-                  <button type="submit" className="btn btn-primary">
+                  <button type="submit" className="btn" style={{ backgroundColor: "var(--primary-color)", color: "white" }}>
                     بحث
                   </button>
                 </form>
@@ -143,8 +143,8 @@ const UserShow = () => {
                             <span
                               className={`badge  py-2 rounded-pill fw-medium ${
                                 user.role === 1
-                                  ? "bg-success   border-success-subtle"
-                                  : "bg-primary  border-primary-subtle"
+                                  ? "bg-secondary   border-success-subtle"
+                                  : "--primary-color  border-primary-subtle"
                               }`}
                             >
                               {user.role === 1 ? "أدمن" : "مستخدم"}
@@ -155,7 +155,8 @@ const UserShow = () => {
                           <td>
                             <Link
                               to={`/Dashboard/users/edit/${user.id}`}
-                              className="btn btn-sm btn-primary d-flex align-items-center justify-content-center gap-1"
+                              className="btn btn-sm d-flex align-items-center justify-content-center gap-1"
+                              style={{ backgroundColor: "var(--primary-color)", color: "white" }}
                             >
                               تعديل
                             </Link>
@@ -192,6 +193,7 @@ const UserShow = () => {
                       >
                         <button
                           className="page-link"
+                          style={{ backgroundColor: "var(--primary-color)", color: "white" }}
                           onClick={() => setPage(p)}
                         >
                           {p}

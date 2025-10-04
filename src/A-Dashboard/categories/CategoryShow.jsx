@@ -74,12 +74,12 @@ const CategoryShow = () => {
   return (
     <div className="container mt-4" dir="rtl">
       <div className="row justify-content-center">
-        <h1 className="text-center mb-4 fw-bold text-primary">إدارة الأصناف</h1>
+        <h1 className="text-center mb-4 fw-bold" style={{ color: "var(--primary-color)" }}>إدارة الأصناف</h1>
         <div className="col-md-12">
           {message && <div className="alert alert-success text-center">{message}</div>}
 
           <div className="card shadow-lg border-0">
-            <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <div className="card-header text-white d-flex justify-content-between align-items-center" style={{ backgroundColor: "var(--primary-color)" }}>
               <h4 className="mb-0">قائمة الأصناف</h4>
               <Link to="/Dashboard/categories/create" className="btn btn-light btn-sm text-dark">
                 إضافة صنف
@@ -88,7 +88,7 @@ const CategoryShow = () => {
 
             <div className="card-body bg-light">
               <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-2">
-                <button onClick={printTable} className="btn btn-outline-dark btn-sm shadow-sm">
+                <button onClick={printTable} className="btn btn-outline-light text-dark btn-sm shadow-sm">
                   <i className="bi bi-printer"></i> طباعة
                 </button>
                 <form className="d-flex w-100" onSubmit={handleSearchSubmit}>
@@ -99,7 +99,7 @@ const CategoryShow = () => {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
-                  <button type="submit" className="btn btn-primary">بحث</button>
+                  <button type="submit" className="btn" style={{ backgroundColor: "var(--primary-color)", color: "white" }}>بحث</button>
                 </form>
               </div>
 
@@ -142,7 +142,8 @@ const CategoryShow = () => {
                           <td>
                             <Link
                               to={`/Dashboard/categories/edit/${cat.id}`}
-                              className="btn btn-sm btn-primary"
+                              className="btn btn-sm"
+                              style={{ backgroundColor: "var(--primary-color)", color: "#fff" }}
                             >
                               تعديل
                             </Link>
@@ -173,7 +174,7 @@ const CategoryShow = () => {
                 <ul className="pagination justify-content-center flex-wrap gap-2 text-center">
                   {Array.from({ length: lastPage }, (_, i) => i + 1).map((p) => (
                     <li key={p} className={`page-item ${p === page ? "active" : ""}`}>
-                      <button className="page-link" onClick={() => setPage(p)}>
+                      <button className="page-link" onClick={() => setPage(p)} style={{ background: "var(--primary-color)" }}>
                         {p}
                       </button>
                     </li>
