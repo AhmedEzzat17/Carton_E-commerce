@@ -418,7 +418,7 @@ const SpecialOrderShow = () => {
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         .table-header-with-refresh {
           display: flex;
           justify-content: space-between;

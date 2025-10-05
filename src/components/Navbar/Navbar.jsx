@@ -30,6 +30,17 @@ const Navbar = () => {
   const { cartItems, wishlistItems, addToCart, removeFromWishlist } =
     useContext(CartWishlistContext);
 
+  // مستمع لتصفير السلة
+  useEffect(() => {
+    const handleCartCleared = () => {
+      console.log('🔔 Navbar: تم استلام إشارة cartCleared');
+      // العداد سيتحدث تلقائياً لأن cartItems من Context
+    };
+
+    window.addEventListener('cartCleared', handleCartCleared);
+    return () => window.removeEventListener('cartCleared', handleCartCleared);
+  }, []);
+
   // جلب الفئات من الـ API
   const [categories, setCategories] = useState([]);
   useEffect(() => {
@@ -857,6 +868,7 @@ const Navbar = () => {
                             onClick={() => {
                               setShowCart(false);
                               closeSidebar();
+                              window.scrollTo(0, 0);
                             }}
                           >
                             عرض السلة
@@ -1305,6 +1317,7 @@ const Navbar = () => {
                       onClick={() => {
                         setShowCart(false);
                         closeSidebar();
+                        window.scrollTo(0, 0);
                       }}
                     >
                       عرض السلة
@@ -1328,7 +1341,7 @@ const Navbar = () => {
         </div>
       </header>
 
-      <style jsx>{`
+      <style>{`
         .offcanvas-backdrop.show {
           opacity: 0 !important;
         }

@@ -1,7 +1,7 @@
 // src/A-Dashboard/products/ProductCreate.jsx
 
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import CategoryService from "../../services/categoryService";
 import ProductService from "../../services/productService";
 import "./ProductCreate.css";
@@ -21,6 +21,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function ProductCreate() {
+  const navigate = useNavigate();
+  
   // حالة النموذج الأساسية
   const [formData, setFormData] = useState({
     name: "",
@@ -439,6 +441,11 @@ export default function ProductCreate() {
       setVariants([]);
       setVariantEnabled(false);
       setErrors({});
+      
+      // التحويل لصفحة الـ Show بعد 2 ثانية
+      setTimeout(() => {
+        navigate("/Dashboard/products");
+      }, 2000);
     } catch (error) {
       setIsSuccess(false);
       if (error.response?.data?.message) {
@@ -466,6 +473,27 @@ export default function ProductCreate() {
 
   return (
     <div className="container-fluid" dir="rtl">
+      {/* رسالة النجاح/الخطأ فوق الشاشة */}
+      {serverMessage && (
+        <div
+          className={`alert ${
+            isSuccess ? "alert-success" : "alert-danger"
+          } text-center`}
+          style={{
+            position: "fixed",
+            top: "20px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 9999,
+            minWidth: "300px",
+            maxWidth: "500px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+          }}
+        >
+          {serverMessage}
+        </div>
+      )}
+      
       {/* مودال اختيار الصور */}
       <Modal
         show={showImageModal}
@@ -517,16 +545,6 @@ export default function ProductCreate() {
               </div>
             </div>
             <div className="card-body p-4 bg-light">
-              {serverMessage && (
-                <div
-                  className={`alert ${
-                    isSuccess ? "alert-success" : "alert-danger"
-                  } text-center`}
-                >
-                  {serverMessage}
-                </div>
-              )}
-
               <form
                 id="productForm"
                 onSubmit={handleSubmit}

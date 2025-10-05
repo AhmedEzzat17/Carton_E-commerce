@@ -182,7 +182,7 @@ const Login = ({ onLoginSuccess }) => {
           </Form.Group>
 
           <Button
-            variant="primary"
+            variant="success"
             type="submit"
             className="w-100 auth-button"
             disabled={isLoading}

@@ -72,43 +72,13 @@ class OrderService extends ApiFunctions {
         }
       }
       
-      // إذا لم نجد الطلب، اعرض البيانات التجريبية
-      console.log(`⚠️ Order ${id} not found, using fallback data`);
-      
-      const fallbackOrder = {
-        id: parseInt(id),
-        order_number: `ORD-${id}`,
-        user: {
-          name: "Test User",
-          email: "admin@gmail.com",
-          phone: "01010000000"
-        },
-        shipping_address: JSON.stringify({
-          address: "القاهرة",
-          phone: "01010000000"
-        }),
-        payment_method: "cod",
-        status: "pending",
-        total_amount: 1512.00,
-        order_items: [
-          {
-            product_name: "صناديق",
-            quantity: 8,
-            unit_price: 189.00,
-            subtotal: 1512.00
-          }
-        ],
-        created_at: new Date().toISOString()
-      };
-      
-      return {
-        data: {
-          data: fallbackOrder
-        }
-      };
+      // إذا لم نجد الطلب، ارمي خطأ - لا بيانات افتراضية
+      console.log(`❌ Order ${id} not found in any page`);
+      throw new Error(`الطلب رقم ${id} غير موجود`);
       
     } catch (error) {
       console.error("❌ Error in getById:", error);
+      // لا بيانات افتراضية - فقط بيانات حقيقية
       throw error;
     }
   };

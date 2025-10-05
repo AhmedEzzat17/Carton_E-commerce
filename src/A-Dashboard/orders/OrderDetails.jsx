@@ -11,6 +11,8 @@ const OrderDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("");
 
   // Fetch order details
   const fetchOrderDetails = useCallback(async () => {
@@ -18,37 +20,76 @@ const OrderDetails = () => {
       setLoading(true);
       setError(null);
 
+      // استخدام نفس النظام الذكي المستخدم في الداشبورد
       const response = await OrderService.getUserOrders({ withAuth: true });
 
-      console.log("📦 All Orders Response:", response);
       console.log("🔍 Response.data:", response.data);
       console.log("🔍 Response.data.data:", response.data.data);
       console.log("🔍 Is Array?:", Array.isArray(response.data.data));
 
       // الطلبات موجودة في response.data.data.data
-      const ordersArray = response.data?.data?.data;
+      let ordersArray = response.data?.data?.data || [];
       
-      console.log("🔍 Orders Array:", ordersArray);
-      console.log("🔍 Is Orders Array?:", Array.isArray(ordersArray));
+      console.log("🔍 Orders Array from API:", ordersArray?.length || 0);
       
-      if (ordersArray && Array.isArray(ordersArray)) {
-        // البحث عن الطلب المحدد في قائمة الطلبات
-        const targetOrder = ordersArray.find(order => order.id == id);
+      // دمج مع localStorage لضمان العثور على الطلبات الجديدة
+      const recentOrders = JSON.parse(localStorage.getItem('recentOrders') || '[]');
+      console.log("💾 Recent orders from localStorage:", recentOrders?.length || 0);
+      
+      // دمج الطلبات
+      const allOrdersMap = new Map();
+      
+      // إضافة طلبات API
+      if (Array.isArray(ordersArray)) {
+        ordersArray.forEach(order => {
+          allOrdersMap.set(order.id, order);
+        });
+      }
+      
+      // إضافة طلبات localStorage
+      recentOrders.forEach(order => {
+        if (order.id && !allOrdersMap.has(order.id)) {
+          // إضافة بيانات المستخدم إذا لم تكن موجودة
+          if (!order.user && order.user_name) {
+            order.user = {
+              id: order.user_id,
+              name: order.user_name,
+              email: order.user_email,
+              phone: order.user_phone
+            };
+          }
+          allOrdersMap.set(order.id, order);
+        }
+      });
+      
+      const combinedOrders = Array.from(allOrdersMap.values());
+      console.log("🔍 Combined orders total:", combinedOrders.length);
+
+      if (combinedOrders.length > 0) {
+        // البحث عن الطلب المحدد في قائمة الطلبات المدمجة
+        const targetOrder = combinedOrders.find(order => order.id == id);
         
         console.log("🔍 Looking for order ID:", id);
-        console.log("📋 Available orders:", ordersArray.map(o => ({id: o.id, order_number: o.order_number})));
+        console.log("📋 Available orders:", combinedOrders.map(o => ({id: o.id, order_number: o.order_number})));
         
         if (targetOrder) {
           console.log("✅ Found target order:", targetOrder);
           
-          // معالجة البيانات بنفس طريقة profile.jsx
+          // معالجة البيانات بنفس طريقة profile.jsx مع إضافة معلومات المستخدم
           const processedOrder = {
             ...targetOrder,
             order_items: targetOrder.order_items || targetOrder.items || [],
             shipping_address: targetOrder.shipping_address || targetOrder.address || 'غير محدد',
             payment_method: targetOrder.payment_method || 'غير محدد',
             status: targetOrder.status || 'pending',
-            total_amount: targetOrder.total_amount || targetOrder.total || 0
+            total_amount: targetOrder.total_amount || targetOrder.total || 0,
+            // إضافة معلومات المستخدم من الحقول الجديدة
+            user: {
+              name: targetOrder.user_name || targetOrder.user?.name || 'غير محدد',
+              email: targetOrder.user_email || targetOrder.user?.email || 'غير محدد',
+              phone: targetOrder.user_phone || targetOrder.user?.phone || 'غير محدد',
+              id: targetOrder.user_id || targetOrder.user?.id
+            }
           };
 
           // معالجة العنوان إذا كان JSON string
@@ -65,7 +106,7 @@ const OrderDetails = () => {
           console.log("✅ Processed Order:", processedOrder);
           setOrder(processedOrder);
         } else {
-          console.log("❌ Order not found, available IDs:", ordersArray.map(o => o.id));
+          console.log("❌ Order not found, available IDs:", combinedOrders.map(o => o.id));
           setError("الطلب غير موجود");
         }
       } else {
@@ -153,14 +194,14 @@ const OrderDetails = () => {
       const orderDataToSend = {
         // البيانات الأساسية المطلوبة من الـ API
         order_number: order.order_number || order.id?.toString(),
-        user_id: order.user_id || order.customer?.id || 1, // قيمة افتراضية إذا لم تكن موجودة
+        user_id: order.user_id || order.user?.id || order.customer?.id, // استخدام بيانات المستخدم الصحيحة
         total_amount: order.total_amount?.toString() || "0",
-        status: newStatus, // استخدم newStatus بدلاً من status لتجنب تعارض ESLint
+        status: newStatus,
 
-        // البيانات الإضافية
-        customer_name: order.customer?.name || order.customer_name || "عميل غير محدد",
-        customer_email: order.customer?.email || order.customer_email || "customer@example.com",
-        customer_phone: order.customer?.phone || order.customer_phone || "01234567890",
+        // البيانات الإضافية - محسنة لاستخدام order.user
+        customer_name: order.user?.name || order.customer?.name || order.customer_name || "عميل غير محدد",
+        customer_email: order.user?.email || order.customer?.email || order.customer_email || "customer@example.com",
+        customer_phone: order.user?.phone || order.customer?.phone || order.customer_phone || "01234567890",
         shipping_address: JSON.stringify(order.shipping_address || {address: "عنوان غير محدد"}), // تحويل إلى JSON
         payment_method: order.payment_method || "cash",
         notes: order.notes || "",
@@ -196,17 +237,47 @@ const OrderDetails = () => {
       orderDataToSend.id = order.id;
       
       await orderService.updateStatus(id, newStatus, orderDataToSend);
+      
+      // تحديث الحالة في المكون
       setOrder({ ...order, status: newStatus });
-      alert("تم تحديث حالة الطلب بنجاح");
-
-      // العودة إلى صفحة قائمة الطلبات بعد نجاح التحديث
-      navigate("/Dashboard/orders");
+      
+      // تحديث localStorage لضمان تحديث الجدول
+      const recentOrders = JSON.parse(localStorage.getItem('recentOrders') || '[]');
+      const updatedOrders = recentOrders.map(savedOrder => {
+        if (savedOrder.id == id) {
+          console.log(`🔄 تحديث حالة الطلب ${id} في localStorage: ${savedOrder.status} → ${newStatus}`);
+          return { ...savedOrder, status: newStatus };
+        }
+        return savedOrder;
+      });
+      localStorage.setItem('recentOrders', JSON.stringify(updatedOrders));
+      
+      // إرسال إشارة للداشبورد لتحديث الجدول فوراً
+      window.dispatchEvent(new CustomEvent('orderStatusUpdated', { 
+        detail: { orderId: id, newStatus: newStatus }
+      }));
+      console.log(`🔔 إرسال إشارة تحديث حالة الطلب ${id}`);
+      
+      setMessage("تم تحديث حالة الطلب بنجاح");
+      setMessageType("success");
+      
+      // إخفاء الرسالة والعودة بعد 2 ثانية
+      setTimeout(() => {
+        setMessage("");
+        setMessageType("");
+        navigate("/Dashboard/orders");
+      }, 2000);
       window.scrollTo(0, 0);
     } catch (err) {
       console.error("Error updating status:", err);
       // الرسالة ستظهر من orderService إذا كان خطأ 422
       if (err.response?.status !== 422) {
-        alert("حدث خطأ في تحديث حالة الطلب");
+        setMessage("حدث خطأ في تحديث حالة الطلب");
+        setMessageType("error");
+        setTimeout(() => {
+          setMessage("");
+          setMessageType("");
+        }, 3000);
       }
     } finally {
       setUpdatingStatus(false);
@@ -259,6 +330,27 @@ const OrderDetails = () => {
 
   return (
     <div className="order-details-container">
+      {/* رسالة النجاح/الخطأ فوق الشاشة */}
+      {message && (
+        <div
+          className={`alert text-center ${
+            messageType === "error" ? "alert-danger" : "alert-success"
+          }`}
+          style={{
+            position: "fixed",
+            top: "20px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 9999,
+            minWidth: "300px",
+            maxWidth: "500px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+          }}
+        >
+          {message}
+        </div>
+      )}
+      
       {/* ====== Header ====== */}
       <div className="order-header">
         <div className="header-content">
@@ -407,21 +499,28 @@ const OrderDetails = () => {
               <div className="info-item">
                 <span className="info-label">الاسم</span>
                 <span className="info-value">
-                  {order.user?.name || "غير محدد"}
+                  {order.user_name || order.user?.name || "غير محدد"}
                 </span>
               </div>
               <div className="info-item">
                 <span className="info-label">البريد الإلكتروني</span>
                 <span className="info-value">
-                  {order.user?.email || "غير محدد"}
+                  {order.user_email || order.user?.email || "غير محدد"}
                 </span>
               </div>
               <div className="info-item">
                 <span className="info-label">رقم الهاتف</span>
                 <span className="info-value">
-                  {order.user?.phone || 
+                  {order.user_phone || 
+                   order.user?.phone || 
                    (typeof order.shipping_address === 'object' ? order.shipping_address?.phone : null) ||
                    "غير محدد"}
+                </span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">معرف المستخدم</span>
+                <span className="info-value">
+                  {order.user_id || order.user?.id || "غير محدد"}
                 </span>
               </div>
             </div>

@@ -121,6 +121,27 @@ export default function CategoryEdit() {
 
   return (
     <div className="py-5" dir="rtl" style={{ backgroundColor: "#f7f9fc" }}>
+      {/* رسالة النجاح/الخطأ فوق الشاشة */}
+      {serverMessage && (
+        <div
+          className={`alert text-center ${
+            messageType === "error" ? "alert-danger" : "alert-success"
+          }`}
+          style={{
+            position: "fixed",
+            top: "20px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 9999,
+            minWidth: "300px",
+            maxWidth: "500px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+          }}
+        >
+          {serverMessage}
+        </div>
+      )}
+      
       <div className="container">
         <div className="row justify-content-center">
           <div className="col-md-10">
@@ -138,16 +159,6 @@ export default function CategoryEdit() {
               </div>
 
               <div className="card-body bg-light p-4">
-                {serverMessage && (
-                  <div
-                    className={`alert text-center ${
-                      messageType === "error" ? "alert-danger" : "alert-success"
-                    }`}
-                  >
-                    {serverMessage}
-                  </div>
-                )}
-
                 <form onSubmit={handleSubmit} encType="multipart/form-data">
                   <div className="row gy-3">
                     {/* الاسم */}

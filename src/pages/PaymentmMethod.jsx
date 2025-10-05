@@ -10,6 +10,9 @@ import "../assets/css/PaymentmMethod.css";
 const PaymentmMethod = () => {
   // رسالة نجاح الطلب
   const [orderSuccessMsg, setOrderSuccessMsg] = useState("");
+  
+  // استخدام Context لتصفير السلة
+  const { clearCart } = useContext(CartWishlistContext);
 
   // دالة تجهيز وإرسال الطلب
   // دالة إرسال الطلب مع بيانات المودال
@@ -23,7 +26,11 @@ const PaymentmMethod = () => {
     try {
       const cartItemsLS = JSON.parse(localStorage.getItem("cartItems") || "[]");
       const cartNotes = JSON.parse(localStorage.getItem("cartNotes") || "{}");
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const userData = JSON.parse(localStorage.getItem("user") || "{}");
+      const user = userData.user || {}; // استخراج بيانات المستخدم الصحيحة
+      
+      console.log('👤 بيانات المستخدم في PaymentMethod:', user);
+      console.log('🆔 user_id الذي سيتم إرساله:', user?.id);
 
       // تجهيز عناصر الطلب
       const order_items = cartItemsLS.map((item) => ({
@@ -43,7 +50,7 @@ const PaymentmMethod = () => {
       // تجهيز بيانات الطلب الأساسية
       const orderData = {
         order_number: `ORD-${Math.floor(Math.random() * 100000)}`,
-        user_id: user?.id || 1,
+        user_id: user?.id || null, // لا نضع قيمة افتراضية خاطئة
         total_amount,
         status: "pending",
         notes: note || Object.values(cartNotes).join(" | ") || "",
@@ -55,6 +62,13 @@ const PaymentmMethod = () => {
         }),
         order_items,
       };
+      
+      // تأكيد من وجود user_id صحيح
+      if (!orderData.user_id) {
+        console.error('❌ خطأ: لا يوجد user_id صحيح!');
+        console.log('👤 بيانات المستخدم المتاحة:', user);
+        throw new Error('لا يمكن إرسال الطلب بدون تسجيل الدخول');
+      }
 
       // طباعة قبل الإرسال
       console.log("Order JSON sent to backend:", {
@@ -65,14 +79,24 @@ const PaymentmMethod = () => {
       if (paymentMethod === "bank_transfer" && bankImage) {
         const formData = new FormData();
 
-        // الحقول العادية
+        // الحقول العادية - محسنة لضمان الحفظ الصحيح
         formData.append("order_number", orderData.order_number);
-        formData.append("user_id", orderData.user_id);
-        formData.append("total_amount", orderData.total_amount);
+        formData.append("user_id", String(orderData.user_id)); // تأكيد أنه string
+        formData.append("total_amount", String(orderData.total_amount));
         formData.append("status", orderData.status);
-        formData.append("notes", orderData.notes);
+        formData.append("notes", orderData.notes || "");
         formData.append("payment_method", orderData.payment_method);
         formData.append("shipping_address", orderData.shipping_address);
+        
+        // إضافة بيانات المستخدم لضمان الفلترة في البروفايل
+        if (user.name) formData.append("user_name", user.name);
+        if (user.email) formData.append("user_email", user.email);
+        if (user.phone) formData.append("user_phone", user.phone);
+        
+        console.log('📎 بيانات المستخدم المضافة لـ FormData:');
+        console.log('  user_name:', user.name);
+        console.log('  user_email:', user.email);
+        console.log('  user_phone:', user.phone);
 
         // order_items كـ Array
         orderData.order_items.forEach((item, index) => {
@@ -85,6 +109,12 @@ const PaymentmMethod = () => {
 
         // الملف
         formData.append("payment_receipt", bankImage);
+        
+        // طباعة FormData للتشخيص
+        console.log('📎 FormData قبل الإرسال:');
+        for (let [key, value] of formData.entries()) {
+          console.log(`  ${key}:`, value);
+        }
 
         // إرسال الطلب مع FormData
         const response = await orderService.createOrder(formData);
@@ -100,6 +130,16 @@ const PaymentmMethod = () => {
       // مسح السلة والملاحظات بعد نجاح العملية
       localStorage.removeItem("cartItems");
       localStorage.removeItem("cartNotes");
+      
+      // تصفير السلة في Context فوراً لتحديث العداد في Navbar
+      if (clearCart) {
+        clearCart();
+        console.log('🗑️ تم تصفير السلة في Context فوراً');
+      }
+      
+      // إرسال إشارة لتحديث جميع المكونات
+      window.dispatchEvent(new CustomEvent('cartCleared'));
+      console.log('🔔 تم إرسال إشارة cartCleared');
     } catch (err) {
       console.error("Order submission error:", err.response?.data || err);
       setOrderSuccessMsg("حدث خطأ أثناء إرسال الطلب، يرجى المحاولة مرة أخرى.");

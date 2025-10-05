@@ -100,6 +100,25 @@ export default function UserCreate() {
 
   return (
     <div className="py-5" dir="rtl">
+      {/* رسالة النجاح/الخطأ فوق الشاشة */}
+      {serverMessage && (
+        <div
+          className={`alert ${isSuccess ? "alert-success" : "alert-danger"} text-center`}
+          style={{
+            position: "fixed",
+            top: "20px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 9999,
+            minWidth: "300px",
+            maxWidth: "500px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+          }}
+        >
+          {serverMessage}
+        </div>
+      )}
+      
       <div className="container">
         <div className="row justify-content-center">
           <div className="col-md-10">
@@ -110,30 +129,6 @@ export default function UserCreate() {
                 </h4>
               </div>
               <div className="card-body bg-light">
-                {serverMessage && (
-                  <div
-                    className={`alert ${
-                      isSuccess ? "alert-success" : "alert-danger"
-                    } text-center`}
-                  >
-                    {serverMessage}
-                  </div>
-                )}
-
-                {/* {errors && Object.keys(errors).length > 0 && (
-                  <div className="alert alert-danger">
-                    <ul className="mb-0">
-                      {Object.entries(errors).map(([field, messages]) =>
-                        Array.isArray(messages)
-                          ? messages.map((msg, idx) => (
-                              <li key={`${field}-${idx}`}>{msg}</li>
-                            ))
-                          : <li key={field}>{messages}</li>
-                      )}
-                    </ul>
-                  </div>
-                )} */}
-
                 <form onSubmit={handleSubmit}>
                   <div className="row">
                     <div className="col-md-6 mb-3">

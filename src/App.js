@@ -146,6 +146,12 @@ function App() {
     setWishlistItems((prev) => prev.filter((item) => item.id !== product.id));
   };
 
+  // دالة تصفير السلة بالكامل
+  const clearCart = () => {
+    setCartItems([]);
+    console.log('🗑️ تم تصفير السلة في Context');
+  };
+
   useEffect(() => {
     AOS.init({ duration: 1500, once: true });
   }, []);
@@ -160,6 +166,7 @@ function App() {
         addToWishlist,
         removeFromWishlist,
         updateCartQuantity, // توفير الدالة في السياق
+        clearCart, // دالة تصفير السلة
       }}
     >
       <Router>

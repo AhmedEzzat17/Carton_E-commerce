@@ -92,6 +92,27 @@ const Profile = () => {
   useEffect(() => {
     if (activeTab === 'orders') fetchOrders();
   }, [activeTab]);
+  
+  // مستمع للطلبات الجديدة - مثل الداشبورد
+  useEffect(() => {
+    const handleNewOrder = (event) => {
+      console.log('🔔 تم استلام إشارة طلب جديد في البروفايل:', event.detail);
+      
+      // إعادة تحميل الطلبات إذا كان تاب الطلبات نشط
+      if (activeTab === 'orders') {
+        console.log('🔄 تحديث طلبات البروفايل بعد إضافة طلب جديد...');
+        setTimeout(() => {
+          fetchOrders();
+        }, 1000); // تأخير ثانية واحدة لضمان الحفظ
+      }
+    };
+
+    window.addEventListener('newOrderAdded', handleNewOrder);
+    
+    return () => {
+      window.removeEventListener('newOrderAdded', handleNewOrder);
+    };
+  }, [activeTab]);
 
   // Update user profile - LOCAL STORAGE VERSION (temporary)
   const updateUserProfile = async (profileData) => {
@@ -244,17 +265,20 @@ const Profile = () => {
     }
   };
 
-  // Fetch user orders using OrderService - الطلبات الحقيقية فقط
+  // Fetch user orders using OrderService - الطلبات الحقيقية من الداشبورد
   const fetchOrders = async () => {
     try {
       setLoading(prev => ({ ...prev, orders: true }));
       
-      console.log('🔄 جاري تحميل الطلبات الحقيقية من API...');
+      console.log('🔄 جاري تحميل الطلبات من الداشبورد...');
+      
+      const userData = JSON.parse(localStorage.getItem('user'))?.user || {};
+      console.log('👤 بيانات المستخدم الحالي:', userData);
       
       let response;
       
       try {
-        // المحاولة الأولى: استخدام OrderService
+        // جلب الطلبات من نفس endpoint الداشبورد
         response = await OrderService.getUserOrders({ withAuth: true });
         console.log('✅ تم تحميل الطلبات بنجاح');
       } catch (firstError) {
@@ -292,10 +316,74 @@ const Profile = () => {
         
         console.log('📊 البيانات المستخرجة:', ordersData);
         
+        // دمج مع localStorage لضمان عرض الطلبات الجديدة
+        const recentOrders = JSON.parse(localStorage.getItem('recentOrders') || '[]');
+        console.log('💾 طلبات localStorage:', recentOrders.length);
+        
+        // دمج الطلبات مع تجنب التكرار
+        const allOrdersMap = new Map();
+        
+        // إضافة طلبات API
         if (Array.isArray(ordersData)) {
-          console.log('🔍 عينة من البيانات الخام:', ordersData[0]);
+          ordersData.forEach(order => {
+            allOrdersMap.set(order.id, order);
+          });
+        }
+        
+        // إضافة طلبات localStorage
+        recentOrders.forEach(order => {
+          if (order.id && !allOrdersMap.has(order.id)) {
+            // إضافة بيانات المستخدم إذا لم تكن موجودة
+            if (!order.user && order.user_name) {
+              order.user = {
+                id: order.user_id,
+                name: order.user_name,
+                email: order.user_email,
+                phone: order.user_phone
+              };
+            }
+            allOrdersMap.set(order.id, order);
+            console.log(`🔄 أضيف طلب من localStorage: ${order.id}`);
+          }
+        });
+        
+        const combinedOrders = Array.from(allOrdersMap.values())
+          .sort((a, b) => new Date(b.created_at || b.date) - new Date(a.created_at || a.date));
+        
+        if (combinedOrders.length > 0) {
+          console.log('🔍 عينة من البيانات المدمجة:', combinedOrders[0]);
+          console.log(`📊 API: ${ordersData.length}, localStorage: ${recentOrders.length}, مدمجة: ${combinedOrders.length}`);
           
-          const ordersWithDetails = ordersData.map(order => {
+          // فلترة الطلبات للمستخدم الحالي فقط - محسنة للتحويل البنكي
+          const userOrders = combinedOrders.filter(order => {
+            const orderUserId = order.user_id || order.user?.id;
+            const currentUserId = userData.id;
+            
+            // تحويل إلى أرقام لضمان المقارنة الصحيحة
+            const orderUserIdNum = parseInt(orderUserId);
+            const currentUserIdNum = parseInt(currentUserId);
+            
+            console.log(`🔍 فحص الطلب ${order.id}: orderUserId=${orderUserId} (${orderUserIdNum}), currentUserId=${currentUserId} (${currentUserIdNum})`);
+            console.log(`🔍 طريقة الدفع: ${order.payment_method}`);
+            
+            // فحص متعدد الطرق لضمان التطابق
+            const isMatch = (
+              (orderUserId && currentUserId && orderUserId == currentUserId) ||
+              (orderUserIdNum && currentUserIdNum && orderUserIdNum === currentUserIdNum) ||
+              (order.user?.id && userData.id && order.user.id == userData.id) ||
+              (order.user_email && userData.email && order.user_email === userData.email)
+            );
+            
+            if (isMatch) {
+              console.log(`✅ طلب مطابق للمستخدم: ${order.id}`);
+            }
+            
+            return isMatch;
+          });
+          
+          console.log(`📊 عدد الطلبات المفلترة للمستخدم: ${userOrders.length} من أصل ${ordersData.length}`);
+          
+          const ordersWithDetails = userOrders.map(order => {
             // معالجة شاملة لجميع الحقول المحتملة
             const processedOrder = {
               ...order,
@@ -317,7 +405,11 @@ const Profile = () => {
               // معالجة طريقة الدفع
               payment_method: order.payment_method || order.paymentMethod || 'غير محدد',
               // معالجة العنوان
-              shipping_address: order.shipping_address || order.address || order.delivery_address || 'غير محدد'
+              shipping_address: order.shipping_address || order.address || order.delivery_address || 'غير محدد',
+              // إضافة معلومات المستخدم
+              user_name: order.user_name || order.user?.name || userData.name,
+              user_email: order.user_email || order.user?.email || userData.email,
+              user_phone: order.user_phone || order.user?.phone || userData.phone
             };
             
             // معالجة العناصر إذا كانت string JSON
