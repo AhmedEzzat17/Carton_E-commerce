@@ -103,14 +103,25 @@ const Navbar = () => {
 
   // Scroll detection for mobile navbar changes
   useEffect(() => {
+    let lastScrollTop = 0;
     const handleScroll = () => {
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      setIsScrolled(scrollTop > 50);
+
+      // منطق الهيستريسيس لمنع التبديل السريع في المنتصف
+      if (scrollTop > 50 && !isScrolled) {
+        // الانتقال من الحالة العلوية للسفلية عند 50 بكسل
+        setIsScrolled(true);
+      } else if (scrollTop < 30 && isScrolled) {
+        // العودة من السفلية للعلوية عند 30 بكسل فقط
+        setIsScrolled(false);
+      }
+
+      lastScrollTop = scrollTop;
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [isScrolled]);
 
   useEffect(() => {
     const body = document.body;
@@ -638,7 +649,7 @@ const Navbar = () => {
                                   />
                                   {item.name}{" "}
                                   {item.slug && (
-                                    <span className="text-muted">
+                                    <span className="#" style={{color:"gray"}}>
                                       ({item.slug})
                                     </span>
                                   )}
@@ -755,6 +766,7 @@ const Navbar = () => {
                             onClick={() => {
                               setShow(false);
                               closeSidebar();
+                              window.scrollTo(0, 0);
                             }}
                           >
                             عرض قائمة رغباتك
@@ -1109,7 +1121,7 @@ const Navbar = () => {
                             />
                             {item.name}{" "}
                             {item.slug && (
-                              <span className="text-muted">({item.slug})</span>
+                              <span className="#" style={{color:"gray"}}>({item.slug})</span>
                             )}
                           </div>
                         ))
@@ -1198,6 +1210,7 @@ const Navbar = () => {
                       onClick={() => {
                         setShow(false);
                         closeSidebar();
+                        window.scrollTo(0, 0);
                       }}
                     >
                       عرض قائمة رغباتك

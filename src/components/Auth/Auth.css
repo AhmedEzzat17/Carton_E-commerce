@@ -172,7 +172,7 @@
   }
   
   .form-control.is-invalid {
-    background: #742a2a;
+    /* background: #742a2a; */
   }
 }
 

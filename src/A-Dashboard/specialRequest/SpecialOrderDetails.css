@@ -589,15 +589,16 @@
 
 .retry-btn:hover,
 .back-btn:hover {
-  background: #5a6fd8;
+  /* background: #5a6fd8; */
   transform: translateY(-1px);
+  color: #fff;
 }
 
-.back-btn {
+.error-container .back-btn {
   background: #6c757d;
 }
 
-.back-btn:hover {
+.error-container .back-btn:hover {
   background: #5a6268;
 }
 

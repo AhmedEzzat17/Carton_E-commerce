@@ -112,13 +112,13 @@ export default function RecentProducts() {
                     >
                       <i className="far fa-heart"></i>
                     </button>
-                    <button
+                    {/* <button
                       type="button"
                       className="icon-btn"
                       title="Quick View"
                     >
                       <i className="fas fa-eye"></i>
-                    </button>
+                    </button> */}
                   </div>
                 </div>
 

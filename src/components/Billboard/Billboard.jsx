@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Autoplay, EffectFade, Pagination } from 'swiper/modules';
+import { gsap } from 'gsap';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -16,6 +18,49 @@ import graphicImg from '../../assets/images/graphic-3578346_1280.png';
 import packageImg from '../../assets/images/package-4256289_1280-removebg-preview.png';
 
 export default function Billboard() {
+  const swiperRef = useRef(null);
+  const textRefs = useRef([]);
+
+  useEffect(() => {
+    // إعداد الانيميشن الأولي للنصوص
+    gsap.set(textRefs.current, {
+      x: 100,
+      opacity: 0
+    });
+
+    // انيميشن ظهور النصوص عند تحميل المكون
+    gsap.to(textRefs.current, {
+      x: 0,
+      opacity: 1,
+      duration: 1,
+      stagger: 0.2,
+      ease: "power2.out",
+      delay: 0.5
+    });
+  }, []);
+
+  const handleSlideChange = (swiper) => {
+    // الحصول على النصوص في الشريحة الحالية
+    const currentSlide = swiper.slides[swiper.activeIndex];
+    const currentTexts = currentSlide.querySelectorAll('.banner-content h2, .banner-content p');
+    
+    // إخفاء النصوص أولاً
+    gsap.set(currentTexts, {
+      x: 100,
+      opacity: 0
+    });
+
+    // ثم إظهارها بانيميشن
+    gsap.to(currentTexts, {
+      x: 0,
+      opacity: 1,
+      duration: 0.8,
+      stagger: 0.15,
+      ease: "power2.out",
+      delay: 0.3
+    });
+  };
+
   return (
     <section
       id="billboard"
@@ -49,6 +94,7 @@ export default function Billboard() {
       </div> */}
 
       <Swiper
+        ref={swiperRef}
         modules={[Navigation, Autoplay, EffectFade, Pagination]}
         navigation={{
           nextEl: '.swiper-button-next',
@@ -69,6 +115,7 @@ export default function Billboard() {
         loop={true}
         speed={800}
         className="main-swiper"
+        onSlideChange={handleSlideChange}
       >
         {/* Slide 1 */}
         <SwiperSlide>
@@ -76,9 +123,11 @@ export default function Billboard() {
             <div className="row d-flex flex-column-reverse flex-md-row align-items-center">
               <div className="col-md-5 offset-md-1 mt-5 mt-md-0 text-center text-md-start">
                 <div className="banner-content">
-                  <h2>كروت مميزة وتغليف أنيق لكل مناسبة</h2>
-                  <p>خصم 30٪ لفترة محدودة – احصل عليه الآن!</p>
-                  <a href="index.html" className="btn mt-3">الذهاب إلى المتجر</a>
+                  <h2 ref={el => textRefs.current[0] = el}>كروت مميزة وتغليف أنيق لكل مناسبة</h2>
+                  <p ref={el => textRefs.current[1] = el}>خصم 30٪ لفترة محدودة – احصل عليه الآن!</p>
+                  <Link to="/FullRecentProductsPage">
+                  <a href="#" className="btn mt-3">الذهاب إلى المتجر</a>
+                  </Link>
                 </div>
               </div>
               <div className="col-md-6 text-center">
