@@ -109,6 +109,8 @@ class SpecialOrderService extends ApiFunctions {
         width: 50.25,
         height: 30.00,
         size: "Custom XL",
+        quantity: 2,
+        phone: "01234567890",
         attachment_file: "custom_design.pdf",
         note: "طلبات خاصة بمواصفات مخصصة",
         created_at: new Date().toISOString()

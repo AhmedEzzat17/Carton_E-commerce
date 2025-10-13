@@ -31,6 +31,10 @@ export default function ProductDetails({ product }) {
     height: "",
     size: "",
   });
+  const [quantity, setQuantity] = useState(1);
+  const [quantityError, setQuantityError] = useState("");
+  const [phone, setPhone] = useState("");
+  const [phoneError, setPhoneError] = useState("");
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileError, setFileError] = useState("");
@@ -116,6 +120,8 @@ export default function ProductDetails({ product }) {
       width: "",
       height: "",
       size: "",
+      quantity: "",
+      phone: "",
     };
 
     // تحقق من الحقول مع السماح بالأرقام العشرية والمئوية
@@ -157,6 +163,27 @@ export default function ProductDetails({ product }) {
       isValid = false;
     }
 
+    // تحقق من الكمية
+    if (!dimensions.quantity) {
+      errors.quantity = "الكمية مطلوبة.";
+      isValid = false;
+    } else if (!/^\d+$/.test(dimensions.quantity)) {
+      errors.quantity = "الكمية يجب أن تكون رقم صحيح.";
+      isValid = false;
+    } else if (parseInt(dimensions.quantity) <= 0) {
+      errors.quantity = "الكمية يجب أن تكون أكبر من صفر.";
+      isValid = false;
+    }
+
+    // تحقق من رقم الهاتف
+    if (!dimensions.phone) {
+      errors.phone = "رقم الهاتف مطلوب.";
+      isValid = false;
+    } else if (!/^[0-9+\-\s()]{10,15}$/.test(dimensions.phone)) {
+      errors.phone = "رقم الهاتف غير صحيح (يجب أن يكون من 10-15 رقم).";
+      isValid = false;
+    }
+
     setDimensionsError(errors);
 
     // التحقق من الملف
@@ -195,6 +222,8 @@ export default function ProductDetails({ product }) {
         width: dimensions.width || '0',
         height: dimensions.height || '0',
         size: dimensions.size || '',
+        quantity: dimensions.quantity || '1',
+        phone: dimensions.phone || '',
         note: note.trim()
       };
 
@@ -378,7 +407,7 @@ export default function ProductDetails({ product }) {
                   ))}
 
               {/* رابط نصي لفتح نافذة الملاحظة */}
-              {/* {inCart ? (
+              {inCart ? (
                 <div
                   className="note-text-link"
                   style={{
@@ -415,7 +444,7 @@ export default function ProductDetails({ product }) {
                 >
                   لإضافه طلب خاص للبائع تخص الطلب،أضف المنتج إلى السلة أولاً
                 </div>
-              )} */}
+              )}
             </div>
 
             {/* زر السلة ديناميكي */}
@@ -523,10 +552,13 @@ export default function ProductDetails({ product }) {
                 borderRadius: "12px",
                 width: "90%",
                 maxWidth: "550px",
+                maxHeight: "90vh",
                 boxShadow: "0 5px 25px rgba(0,0,0,0.15)",
                 textAlign: "right",
                 position: "relative",
                 animation: "fadeInUp 0.3s ease-in-out",
+                margin: "10px",
+                overflowY: "auto",
               }}
             >
               {/* زر إغلاق "×" */}
@@ -676,9 +708,78 @@ export default function ProductDetails({ product }) {
                       }}
                       placeholder="أدخل المقاس"
                     />
+                    
                     {dimensionsError.size && (
                       <span style={{ color: "red", fontSize: "12px" }}>
                         {dimensionsError.size}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* الكمية ورقم التواصل - بجانب بعض */}
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "10px",
+                    marginBottom: "15px",
+                  }}
+                >
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: "5px",
+                        fontWeight: "500",
+                      }}
+                    >
+                      الكمية
+                    </label>
+                    <input
+                      type="number"
+                      value={dimensions.quantity || ""}
+                      onChange={(e) =>
+                        setDimensions({ ...dimensions, quantity: e.target.value })
+                      }
+                      style={{
+                        ...inputStyle,
+                        border: dimensionsError.quantity ? "1px solid red" : "1px solid #ddd"
+                      }}
+                      placeholder="أدخل الكمية المطلوبة"
+                      min="1"
+                    />
+                    {dimensionsError.quantity && (
+                      <span style={{ color: "red", fontSize: "12px" }}>
+                        {dimensionsError.quantity}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: "5px",
+                        fontWeight: "500",
+                      }}
+                    >
+                      رقم التواصل
+                    </label>
+                    <input
+                      type="number"
+                      value={dimensions.phone || ""}
+                      onChange={(e) =>
+                        setDimensions({ ...dimensions, phone: e.target.value })
+                      }
+                      style={{
+                        ...inputStyle,
+                        border: dimensionsError.phone ? "1px solid red" : "1px solid #ddd"
+                      }}
+                      placeholder="أدخل رقم الهاتف للتواصل"
+                    />
+                    {dimensionsError.phone && (
+                      <span style={{ color: "red", fontSize: "12px" }}>
+                        {dimensionsError.phone}
                       </span>
                     )}
                   </div>
@@ -826,6 +927,8 @@ export default function ProductDetails({ product }) {
                       width: "",
                       height: "",
                       size: "",
+                      quantity: "",
+                      phone: "",
                     });
                     setSelectedFile(null);
                     setFileError("");

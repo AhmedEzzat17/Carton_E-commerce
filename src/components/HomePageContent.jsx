@@ -17,7 +17,7 @@ export default function HomePageContent() {
       .get({ withAuth: false })
       .then((res) => {
         const cats = Array.isArray(res.data?.data) ? res.data.data : [];
-        setTopCategories(cats.slice(0, 3)); // أول 3 أقسام فقط
+        setTopCategories(cats.slice(0, 4)); // أول 3 أقسام فقط
         setLoading(false);
       })
       .catch((e) => {

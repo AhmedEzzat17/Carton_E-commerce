@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import HomePageContent from "../components/HomePageContent";
 import ProductPage from "../pages/ProductPage";
 import FullRecentProductsPage from "../pages/FullRecentProductsPage";
@@ -57,7 +57,7 @@ const AppRoutes = () => (
 
     {/* حماية لوحة التحكم وكل صفحاتها للمستخدمين بصلاحية "admin" فقط */}
     <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
-      {/* <Route > */}
+      {/* دعم كلا من Dashboard و dashboard */}
       <Route
         path="/Dashboard"
         element={
@@ -81,6 +81,12 @@ const AppRoutes = () => (
         <Route path="special-orders" element={<SpecialOrderShow />} />
         <Route path="special-orders/:id" element={<SpecialOrderDetails />} />
       </Route>
+      
+      {/* إعادة توجيه dashboard بحرف صغير إلى Dashboard بحرف كبير */}
+      <Route 
+        path="/dashboard/*" 
+        element={<Navigate to={window.location.pathname.replace('/dashboard', '/Dashboard')} replace />} 
+      />
     </Route>
   </Routes>
 );

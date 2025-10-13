@@ -41,6 +41,8 @@ const SpecialOrderDetails = () => {
           width: orderData.width || 0,
           height: orderData.height || 0,
           size: orderData.size || "غير محدد",
+          quantity: orderData.quantity || 1,
+          phone: orderData.phone || orderData.user?.phone || "غير محدد",
           attachment_file: orderData.attachment_file || null,
           note: orderData.note || "لا توجد ملاحظات",
         };
@@ -170,7 +172,7 @@ const SpecialOrderDetails = () => {
               </div>
               <div className="info-row">
                 <span className="label">رقم الهاتف:</span>
-                <span className="value">{specialOrder.user?.phone || "غير محدد"}</span>
+                <span className="value">{specialOrder.phone || specialOrder.user?.phone || "غير محدد"}</span>
               </div>
             </div>
           </div>
@@ -184,9 +186,29 @@ const SpecialOrderDetails = () => {
               </h3>
             </div>
             <div className="card-body">
+              {/* صورة المنتج */}
+              <div className="product-thumb">
+                {specialOrder.product?.images ? (
+                  <img
+                    src={`https://myappapi.fikriti.com/${specialOrder.product.images}`}
+                    alt={specialOrder.product?.name || "صورة المنتج"}
+                    loading="lazy"
+                  />
+                ) : (
+                  <i
+                    className="bx bx-image-alt product-thumb-icon"
+                    aria-hidden="true"
+                  ></i>
+                )}
+              </div>
+              
               <div className="info-row">
                 <span className="label">اسم المنتج:</span>
                 <span className="value">{specialOrder.product?.name || "منتج مخصص"}</span>
+              </div>
+              <div className="info-row">
+                <span className="label">الكمية المطلوبة:</span>
+                <span className="value quantity-badge">{specialOrder.quantity || 1}</span>
               </div>
               <div className="info-row">
                 <span className="label">الحجم المطلوب:</span>
@@ -251,23 +273,64 @@ const SpecialOrderDetails = () => {
                 </h3>
               </div>
               <div className="card-body">
+                {/* عرض الصورة إذا كان الملف صورة */}
+                {specialOrder.attachment_file.match(/\.(jpg|jpeg|png|gif|webp)$/i) && (
+                  <div className="attachment-preview">
+                    <img 
+                      src={`https://myappapi.fikriti.com/${specialOrder.attachment_file}`}
+                      alt="معاينة الملف المرفق"
+                      className="attachment-image"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        console.error('خطأ في تحميل الصورة:', e.target.src);
+                      }}
+                    />
+                  </div>
+                )}
+                
                 <div className="attachment-info">
                   <div className="attachment-icon">
-                    <i className="bx bxs-file-pdf"></i>
+                    <i className={`bx ${specialOrder.attachment_file.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? 'bxs-image' : 'bxs-file-pdf'}`}></i>
                   </div>
                   <div className="attachment-details">
-                    <span className="attachment-name">{specialOrder.attachment_file}</span>
+                    <span className="attachment-name">
+                      {specialOrder.attachment_file.split('/').pop() || specialOrder.attachment_file}
+                    </span>
                     <span className="attachment-type">ملف مرفق من العميل</span>
                   </div>
-                  <a 
-                    href={specialOrder.attachment_file} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
+                  {/* <a 
+                    href={`https://myappapi.fikriti.com/${specialOrder.attachment_file}`} 
+                    download
                     className="download-btn"
+                    onClick={(e) => {
+                      console.log('رابط التحميل:', e.target.href);
+                    }}
                   >
                     <i className="bx bx-download"></i>
                     تحميل
-                  </a>
+                  </a> */}
+                  
+                  {/* زر عرض الملف */}
+                  <button 
+                    className="view-btn" 
+                    onClick={() => window.open(`https://myappapi.fikriti.com/${specialOrder.attachment_file}`, '_blank')}
+                    style={{
+                      marginTop: '0px',
+                      padding: '8px 16px', 
+                      fontSize: '14px', 
+                      background: '#5FA9A9', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    <i className="bx bx-show"></i>
+                    عرض الملف
+                  </button>
                 </div>
               </div>
             </div>

@@ -53,7 +53,8 @@ function HomePageContent() {
 
 function AppContent() {
   const location = useLocation();
-  const isDashboardPage = location.pathname.startsWith("/Dashboard");
+  // جعل التحقق غير حساس لحالة الأحرف (Dashboard أو dashboard)
+  const isDashboardPage = location.pathname.toLowerCase().startsWith("/dashboard");
   const isHomePage = location.pathname === "/";
 
   return (

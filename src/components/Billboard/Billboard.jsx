@@ -126,7 +126,7 @@ export default function Billboard() {
                   <h2 ref={el => textRefs.current[0] = el}>كروت مميزة وتغليف أنيق لكل مناسبة</h2>
                   <p ref={el => textRefs.current[1] = el}>خصم 30٪ لفترة محدودة – احصل عليه الآن!</p>
                   <Link to="/FullRecentProductsPage">
-                  <a href="#" className="btn mt-3">الذهاب إلى المتجر</a>
+                  <button className="btn mt-3">الذهاب إلى المتجر</button>
                   </Link>
                 </div>
               </div>
@@ -151,7 +151,9 @@ export default function Billboard() {
                 <div className="banner-content">
                   <h2>كروت وتغليف بتكمل فرحة مناسبتك</h2>
                   <p>خصم 30٪ لفترة محدودة – احصل عليه الآن!</p>
-                  <a href="index.html" className="btn mt-3">الذهاب إلى المتجر</a>
+                  <Link to="/FullRecentProductsPage">
+                  <button className="btn mt-3">الذهاب إلى المتجر</button>
+                  </Link>
                 </div>
               </div>
               <div className="col-md-6 text-center">
@@ -175,7 +177,9 @@ export default function Billboard() {
                 <div className="banner-content">
                   <h2>صمم لحظاتك بكروت وتغليف مميز</h2>
                   <p>خصم 30٪ لفترة محدودة – احصل عليه الآن!</p>
-                  <a href="index.html" className="btn mt-3">الذهاب إلى المتجر</a>
+                  <Link to="/FullRecentProductsPage">
+                  <button className="btn mt-3">الذهاب إلى المتجر</button>
+                  </Link>
                 </div>
               </div>
               <div className="col-md-6 text-center">

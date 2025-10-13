@@ -42,13 +42,25 @@ const FavoritesPage = () => {
                   <div className="img-container">
                     <Link to={`/productPage/${product.id}`}>
                       <img
-                        src={
-                          product.main_image
-                            ? `${product.main_image}`
-                            : fallbackImage
-                        }
+                        src={(() => {
+                          // نظام شامل لعرض الصور مثل MostDemandedProducts
+                          if (product.main_image) {
+                            return product.main_image;
+                          } else if (
+                            Array.isArray(product.images) &&
+                            product.images.length > 0
+                          ) {
+                            // لو images Array وفيها full_url
+                            return product.images[0]?.full_url || fallbackImage;
+                          } else if (typeof product.images === "string" && product.images) {
+                            // لو images string (مثل RecentProducts)
+                            return `https://myappapi.fikriti.com/${product.images}`;
+                          }
+                          return fallbackImage;
+                        })()}
                         alt={product.name}
                         onClick={() => window.scrollTo(0, 0)}
+                        loading="lazy"
                       />
                     </Link>
                     <div className="hover-icons">

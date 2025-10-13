@@ -41,16 +41,23 @@ const SpecialOrderShow = () => {
         const total = paginated.total || fetchedOrders.length;
         setTotalSpecialOrders(total);
         
-        console.log(`📊 Total Special Orders: ${total}, Current Page Orders: ${fetchedOrders.length}`);
+        console.log(`📆 Total Special Orders: ${total}, Current Page Orders: ${fetchedOrders.length}`);
 
-        setAllSpecialOrders(fetchedOrders);
-        setFilteredSpecialOrders(fetchedOrders);
+        // ترتيب الطلبات لتظهر الأحدث أولاً
+        const sortedOrders = fetchedOrders.sort((a, b) => {
+          const dateA = new Date(a.created_at || a.updated_at || 0);
+          const dateB = new Date(b.created_at || b.updated_at || 0);
+          return dateB - dateA; // الأحدث أولاً
+        });
+
+        setAllSpecialOrders(sortedOrders);
+        setFilteredSpecialOrders(sortedOrders);
         
-        const pages = Math.ceil(fetchedOrders.length / ITEMS_PER_PAGE);
+        const pages = Math.ceil(sortedOrders.length / ITEMS_PER_PAGE);
         setTotalPages(pages);
         
-        // عرض الصفحة الأولى
-        setDisplayedSpecialOrders(fetchedOrders.slice(0, ITEMS_PER_PAGE));
+        // عرض الصفحة الأولى من الطلبات المرتبة
+        setDisplayedSpecialOrders(sortedOrders.slice(0, ITEMS_PER_PAGE));
         setLastFetchTime(Date.now()); // حفظ وقت آخر تحديث
       }
     } catch (error) {
@@ -70,6 +77,7 @@ const SpecialOrderShow = () => {
       }
       
       setError(errorMessage);
+      
       setAllSpecialOrders([]);
       setFilteredSpecialOrders([]);
       setDisplayedSpecialOrders([]);
@@ -152,11 +160,20 @@ const SpecialOrderShow = () => {
           order.user?.name?.toLowerCase().includes(searchLower) ||
           order.user?.email?.toLowerCase().includes(searchLower) ||
           order.product?.name?.toLowerCase().includes(searchLower) ||
-          order.size?.toLowerCase().includes(searchLower)
+          order.size?.toLowerCase().includes(searchLower) ||
+          order.quantity?.toString().includes(searchLower) ||
+          order.phone?.includes(searchLower) ||
+          order.user?.phone?.includes(searchLower)
         );
       });
     }
 
+    // ترتيب الطلبات المفلترة لتظهر الأحدث أولاً
+    filtered = filtered.sort((a, b) => {
+      const dateA = new Date(a.created_at || a.updated_at || 0);
+      const dateB = new Date(b.created_at || b.updated_at || 0);
+      return dateB - dateA; // الأحدث أولاً
+    });
 
     setFilteredSpecialOrders(filtered);
     
@@ -310,12 +327,14 @@ const SpecialOrderShow = () => {
           </div>
         ) : (
           <div className="table-responsive">
-            <table className="special-orders-table">
+            <table className="special-orders-table" style={{textAlign: 'center', width: '100%'}}>
               <thead>
                 <tr>
                   <th>رقم الطلب</th>
                   <th>العميل</th>
                   <th>المنتج</th>
+                  <th>الكمية</th>
+                  <th>رقم الهاتف</th>
                   <th>الأبعاد</th>
                   <th>الحجم</th>
                   <th>التاريخ</th>
@@ -324,20 +343,30 @@ const SpecialOrderShow = () => {
               </thead>
               <tbody>
                 {(displayedSpecialOrders || []).map((order) => (
-                  <tr key={order.id} className="special-order-row1">
+                  <tr key={order.id} className="special-order-row1" style={{textAlign: 'center'}}>
                     <td className="special-order-number1">
                       <span className="order-ref">#{order.id}</span>
                     </td>
 
-                    <td className="customer-info">
-                      <div className="customer-details">
-                        <span className="customer-name">{order.user?.name || "غير محدد"}</span>
+                    <td className="customer-info" style={{textAlign: 'center'}}>
+                      <div className="customer-details" style={{textAlign: 'center'}}>
+                        <span className="customer-name">{order.user?.name || ""}</span>
                         <small className="customer-email">{order.user?.email || ""}</small>
                       </div>
                     </td>
 
-                    <td className="product-info">
-                      <span className="product-name">{order.product?.name || "منتج مخصص"}</span>
+                    <td className="product-info" style={{textAlign: 'center'}}>
+                      <span className="product-name">{order.product?.name || ""}</span>
+                    </td>
+
+                    <td className="quantity" style={{textAlign: 'center'}}>
+                      <span className="quantity-badge">{order.quantity || ""}</span>
+                    </td>
+
+                    <td className="phoneSO" style={{textAlign: 'center'}}>
+                      <span className="phone-textSO">
+                        {order.phone || order.user?.phone || ""}
+                      </span>
                     </td>
 
                     <td className="dimensions">
@@ -347,7 +376,7 @@ const SpecialOrderShow = () => {
                     </td>
 
                     <td className="size">
-                      <span className="size-text">{order.size || "غير محدد"}</span>
+                      <span className="size-text">{order.size || ""}</span>
                     </td>
 
                     <td className="special-order-date">
