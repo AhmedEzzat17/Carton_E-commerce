@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
+
 :root {
   --zelcashop-primary-color: var(--primary-color);
   --zelcashop-secondary-color: #6c757d;
@@ -90,7 +92,8 @@ html {
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif!important;
+  font-family: 'Cairo', 'Tajawal', sans-serif!important;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   font-size: 18px;
   font-weight: 300;
   margin: 0;
@@ -198,7 +201,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--heading-font);
+  /* font-family: var(--heading-font); */
   text-transform: capitalize;
   letter-spacing: 0.03em;
   font-weight: 600;
@@ -1880,7 +1883,8 @@ section#billboard .img-fluid {
   /* middle */
   .one .title-underline,
   .categories-section .title-underline,
-  .contact-2 .title-underline {
+  .contact-2 .title-underline,
+  .recent-title .title-underline {
     margin: 10px auto 0 !important;
   }
 
@@ -2437,7 +2441,7 @@ section#billboard .img-fluid {
 /* ############################################################################# */
 /* cart */
 .zelcashop-cart-section {
-  font-family: 'Cairo', sans-serif;
+  /* font-family: 'Cairo', sans-serif; */
   background-color: #f8f9fa;
   display: flex;
   justify-content: center;
@@ -3133,7 +3137,7 @@ section#billboard .img-fluid {
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  /* font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; */
   direction: rtl;
   padding: 20px;
 }
@@ -3228,7 +3232,7 @@ section#billboard .img-fluid {
   cursor: pointer;
   transition: all 0.3s ease;
   text-decoration: none;
-  font-family: inherit;
+  /* font-family: inherit; */
   min-width: 180px;
   justify-content: center;
 }
@@ -3552,7 +3556,7 @@ section#billboard .img-fluid {
   max-width: 1200px;
   margin: 2rem auto;
   padding: 0 1rem;
-  font-family: 'Tajawal', sans-serif;
+  /* font-family: 'Tajawal', sans-serif; */
   direction: rtl;
 }
 
@@ -3996,7 +4000,7 @@ section#billboard .img-fluid {
   border-radius: 6px;
   font-size: 1rem;
   transition: border-color 0.3s ease;
-  font-family: 'Tajawal', sans-serif;
+  /* font-family: 'Tajawal', sans-serif; */
 }
 
 .form-group input:focus,
@@ -4028,7 +4032,7 @@ section#billboard .img-fluid {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-family: 'Tajawal', sans-serif;
+  /* font-family: 'Tajawal', sans-serif; */
 }
 
 .edit-btn,

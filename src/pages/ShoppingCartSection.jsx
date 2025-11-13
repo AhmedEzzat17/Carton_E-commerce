@@ -171,7 +171,7 @@ const ShoppingCartSection = () => {
                   {subtotal.toFixed(2)} ر.س
                 </span>
               </div>
-              <Link to="/PaymentmMethod" onClick={() => window.scrollTo(0, 0)}>
+              <Link to="/PaymentmMethod" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
                 <button className="zelcashop-checkout-btn">اتمام الطلب</button>
               </Link>
             </div>

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
+
 :root {
   /* مجموعة shop */
   --shop-primary-color: var(--primary-color);
@@ -130,7 +132,6 @@ html {
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
   font-size: 18px;
   font-weight: 300;
   margin: 0;
@@ -238,7 +239,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--heading-font);
+  /* font-family: var(--heading-font); */
   text-transform: capitalize;
   letter-spacing: 0.03em;
   font-weight: 600;
@@ -1081,7 +1082,7 @@ th {
 /* product  */
 .product-details-section {
   padding: 20px 0;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  /* font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; */
   direction: rtl;
   background-color: #f9f9f9;
 }
@@ -1352,7 +1353,7 @@ input[type="number"]::-webkit-inner-spin-button {
 
 .product-features ul li::before {
   content: "\f00c";
-  font-family: "Font Awesome 5 Free";
+  /* font-family: "Font Awesome 5 Free"; */
   font-weight: 900;
   color: var(--accent-color);
   position: absolute;

@@ -90,7 +90,7 @@ export default function Categories() {
                 key={cat.id}
                 to={`/category/${cat.id}`}
                 style={{ textDecoration: "none", color: "inherit" }}
-                onClick={() => window.scrollTo(0, 0)}
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
               >
                 <div className="category-thumbnail-item category-item">
                   <div className="category-icon-wrapper">

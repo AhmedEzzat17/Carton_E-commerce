@@ -274,7 +274,7 @@ const PaymentmMethod = () => {
 
   useEffect(() => {
     if (cashStep === 2) {
-      window.scrollTo(0, 0);
+      window.scrollTo({ top: 0, behavior: "smooth" });
       const timer = setInterval(() => {
         setCountdown(prev => {
           if (prev <= 1) {
@@ -294,7 +294,7 @@ const PaymentmMethod = () => {
 
   useEffect(() => {
     if (bankStep === 1) {
-      window.scrollTo(0, 0);
+      window.scrollTo({ top: 0, behavior: "smooth" });
       const timer = setInterval(() => {
         setCountdown(prev => {
           if (prev <= 1) {

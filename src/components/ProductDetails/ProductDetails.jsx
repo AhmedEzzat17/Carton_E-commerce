@@ -407,7 +407,7 @@ export default function ProductDetails({ product }) {
                   ))}
 
               {/* رابط نصي لفتح نافذة الملاحظة */}
-              {inCart ? (
+              {/* {inCart ? (
                 <div
                   className="note-text-link"
                   style={{
@@ -444,7 +444,8 @@ export default function ProductDetails({ product }) {
                 >
                   لإضافه طلب خاص للبائع تخص الطلب،أضف المنتج إلى السلة أولاً
                 </div>
-              )}
+              )} */}
+              
             </div>
 
             {/* زر السلة ديناميكي */}
@@ -467,7 +468,7 @@ export default function ProductDetails({ product }) {
             <button
               className="buy-now-button"
               onClick={() => {
-                window.scrollTo(0, 0);
+                window.scrollTo({ top: 50, behavior: "smooth" })
                 navigate("/PaymentmMethod", { state: { product } });
               }}
             >

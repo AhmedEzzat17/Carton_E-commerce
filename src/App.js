@@ -34,6 +34,14 @@ const Dashboard = lazy(() => import("./A-Dashboard/Dashboard"));
 
 export const CartWishlistContext = createContext();
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [pathname]);
+  return null;
+}
+
 function HomePageContent() {
   return (
     <>
@@ -150,11 +158,10 @@ function App() {
   // دالة تصفير السلة بالكامل
   const clearCart = () => {
     setCartItems([]);
-    console.log('🗑️ تم تصفير السلة في Context');
   };
 
   useEffect(() => {
-    AOS.init({ duration: 1500, once: true });
+    AOS.init({ duration: 1200, once: true });
   }, []);
 
   return (

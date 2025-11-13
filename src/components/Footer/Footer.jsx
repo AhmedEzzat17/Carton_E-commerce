@@ -37,7 +37,7 @@ export default function Footer() {
       <div className="container footer-top">
         <div className="row gy-4">
           <div className="col-lg-5 col-md-12 footer-about" data-aos="fade-down">
-            <Link to="/" className="logo d-flex align-items-center" onClick={() => window.scrollTo(0, 0)}>
+            <Link to="/" className="logo d-flex align-items-center" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
               {/* <span className="sitename">logo or text</span> */}
               <img
                 className="sitename"
@@ -71,7 +71,7 @@ export default function Footer() {
             <h4>روابط مفيدة</h4>
             <ul>
               <li>
-                <Link to="/" onClick={() => window.scrollTo(0, 0)}>الرئيسية</Link>
+                <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>الرئيسية</Link>
               </li>
               <li>
                 <a href="#one">ما نزل مؤخراً</a>
@@ -98,7 +98,7 @@ export default function Footer() {
                 <li key={category.id}>
                   <Link 
                     to={`/category/${category.id}`} 
-                    onClick={() => window.scrollTo(0, 0)}
+                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                   >
                     {category.name}
                   </Link>

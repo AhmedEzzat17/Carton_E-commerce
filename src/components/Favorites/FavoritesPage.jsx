@@ -59,7 +59,7 @@ const FavoritesPage = () => {
                           return fallbackImage;
                         })()}
                         alt={product.name}
-                        onClick={() => window.scrollTo(0, 0)}
+                        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                         loading="lazy"
                       />
                     </Link>

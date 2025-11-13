@@ -766,7 +766,7 @@ const Navbar = () => {
                             onClick={() => {
                               setShow(false);
                               closeSidebar();
-                              window.scrollTo(0, 0);
+                              window.scrollTo({ top: 0, behavior: "smooth" })
                             }}
                           >
                             عرض قائمة رغباتك
@@ -880,7 +880,7 @@ const Navbar = () => {
                             onClick={() => {
                               setShowCart(false);
                               closeSidebar();
-                              window.scrollTo(0, 0);
+                              window.scrollTo({ top: 0, behavior: "smooth" })
                             }}
                           >
                             عرض السلة
@@ -889,7 +889,7 @@ const Navbar = () => {
                             to="/PaymentmMethod"
                             className="w-100 btn btn-primary"
                             onClick={() => {
-                              window.scrollTo(0, 0);
+                              window.scrollTo({ top: 0, behavior: "smooth" })
                               setShowCart(false);
                               closeSidebar();
                             }}
@@ -947,7 +947,7 @@ const Navbar = () => {
                               </span>
                             </div>
                             <div className="user-dropdown-divider"></div>
-                            <Link className="user-dropdown-item" to="/Profile" onClick={() => { window.scrollTo(0, 0); closeCustomDropdown(); closeUserDropdown(); closeSidebar(); }}>
+                            <Link className="user-dropdown-item" to="/Profile" onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); closeCustomDropdown(); closeUserDropdown(); closeSidebar(); }}>
                               <i className="bx bx-user"></i> الملف الشخصي
                             </Link>
                             {/* <Link className="user-dropdown-item" to="/orders">
@@ -992,7 +992,7 @@ const Navbar = () => {
                       </span>
                     </Dropdown.Toggle>
                     <Dropdown.Menu className="user-dropdown-menu">
-                      <Dropdown.Item as={Link} to="/Profile" onClick={() => { window.scrollTo(0, 0); closeUserDropdown(); closeSidebar(); }}>
+                      <Dropdown.Item as={Link} to="/Profile" onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); closeUserDropdown(); closeSidebar(); }}>
                         <i className="bx bx-user me-2"></i> الملف الشخصي
                       </Dropdown.Item>
                       <Dropdown.Divider />
@@ -1210,7 +1210,7 @@ const Navbar = () => {
                       onClick={() => {
                         setShow(false);
                         closeSidebar();
-                        window.scrollTo(0, 0);
+                        window.scrollTo({ top: 0, behavior: "smooth" })
                       }}
                     >
                       عرض قائمة رغباتك
@@ -1330,7 +1330,8 @@ const Navbar = () => {
                       onClick={() => {
                         setShowCart(false);
                         closeSidebar();
-                        window.scrollTo(0, 0);
+                        window.scrollTo({ top: 0, behavior: "smooth" })
+
                       }}
                     >
                       عرض السلة

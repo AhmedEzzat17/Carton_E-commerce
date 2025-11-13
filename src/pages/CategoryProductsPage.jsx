@@ -86,7 +86,7 @@ export default function CategoryProductsPage() {
                     <img
                       src={imgSrc}
                       alt={product.name}
-                      onClick={() => window.scrollTo(0, 0)}
+                      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                     />
                   </Link>
 
@@ -120,13 +120,13 @@ export default function CategoryProductsPage() {
                     >
                       <i className="far fa-heart"></i>
                     </button>
-                    <button
+                    {/* <button
                       type="button"
                       className="icon-btn"
                       title="Quick View"
                     >
                       <i className="fas fa-eye"></i>
-                    </button>
+                    </button> */}
                   </div>
                 </div>
 

@@ -42,7 +42,7 @@ export default function FullRecentProductsPage() {
 
   return (
     <>
-      <div className="section-title text-center mt-5" data-aos="fade-down">
+      <div className="section-title recent-title text-center mt-5" data-aos="fade-down">
         <h2>ما نزل مؤخرًا</h2>
         <div className="title-underline mx-auto" data-aos="fade-down"></div>
       </div>
@@ -81,7 +81,7 @@ export default function FullRecentProductsPage() {
                         <img
                           src={imgSrc}
                           alt={product.name}
-                          onClick={() => window.scrollTo(0, 0)}
+                          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                         />
                       </div>
                     </Link>
@@ -116,13 +116,13 @@ export default function FullRecentProductsPage() {
                       >
                         <i className="far fa-heart"></i>
                       </button>
-                      <button
+                      {/* <button
                         type="button"
                         className="icon-btn"
                         title="Quick View"
                       >
                         <i className="fas fa-eye"></i>
-                      </button>
+                      </button> */}
                     </div>
                   </div>
 

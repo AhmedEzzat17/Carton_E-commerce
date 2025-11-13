@@ -78,7 +78,7 @@ export default function RecentProducts() {
                           : fallbackImage
                       }
                       alt={product.name}
-                      onClick={() => window.scrollTo(0, 0)}
+                      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                     />
                   </Link>
 
@@ -170,7 +170,7 @@ export default function RecentProducts() {
         <Link to="/FullRecentProductsPage">
           <div
             className="text-center mt-4 mb-5"
-            onClick={() => window.scrollTo(0, 0)}
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             data-aos="fade-up"
           >
             <button className="btn btn-primary load-more-btn">
