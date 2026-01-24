@@ -139,7 +139,7 @@ const Navbar = () => {
     };
 
     window.addEventListener('openLoginModal', handleOpenLoginModal);
-    
+
     return () => {
       window.removeEventListener('openLoginModal', handleOpenLoginModal);
     };
@@ -175,9 +175,9 @@ const Navbar = () => {
             main_image: product.images ? `https://myappapi.fikriti.com/${product.images}` : null,
             images: product.productimages && product.productimages.length > 0
               ? product.productimages.map(img => ({
-                  full_url: `https://myappapi.fikriti.com/${img.url}`,
-                  alt: img.alt_text
-                }))
+                full_url: `https://myappapi.fikriti.com/${img.url}`,
+                alt: img.alt_text
+              }))
               : []
           }));
           setSearchSuggestions(products);
@@ -218,25 +218,25 @@ const Navbar = () => {
   };
 
 
-  
+
 
   // إغلاق القائمة المنسدلة عند النقر في أي مكان بالصفحة
   useEffect(() => {
     const handleClickAnywhere = (event) => {
       const menu = document.querySelector('.user-dropdown-custom');
       const button = document.getElementById('userDropdown');
-      
+
       // إذا كان النقر خارج القائمة وخارج الزر
-      if (menu && button && 
-          !menu.contains(event.target) && 
-          !button.contains(event.target)) {
+      if (menu && button &&
+        !menu.contains(event.target) &&
+        !button.contains(event.target)) {
         menu.classList.remove('show');
       }
     };
 
     // إضافة مستمع الأحداث للصفحة كاملة
     document.addEventListener('click', handleClickAnywhere);
-    
+
     // تنظيف مستمع الأحداث عند إلغاء التثبيت
     return () => {
       document.removeEventListener('click', handleClickAnywhere);
@@ -255,7 +255,7 @@ const Navbar = () => {
     };
 
     document.addEventListener('showLogoutModal', handleShowLogoutModal);
-    
+
     return () => {
       document.removeEventListener('showLogoutModal', handleShowLogoutModal);
     };
@@ -335,7 +335,7 @@ const Navbar = () => {
   const [show, setShow] = useState(false);
 
 
-  
+
 
   return (
     <>
@@ -497,7 +497,7 @@ const Navbar = () => {
                   </li>
                   <li className="nav-item">
                     <a className={`nav-link me-3 ${activeNavItem === 'الأسئلة الشائعة' ? 'active' : ''}`} href="/#faq-section-wrapper" onClick={() => closeSidebar('الأسئلة الشائعة')}>
-                    الأسئلة الشائعة
+                      الأسئلة الشائعة
                     </a>
                   </li>
 
@@ -550,7 +550,7 @@ const Navbar = () => {
                       تواصل معنا
                     </a>
                   </li> */}
-                  
+
                 </ul>
 
                 {/* شريط البحث الرئيسي */}
@@ -590,7 +590,7 @@ const Navbar = () => {
                           borderRadius: "50%",
                           width: "40px",
                           height: "40px",
-                          padding: "0",
+                          padding: "17px",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -649,7 +649,7 @@ const Navbar = () => {
                                   />
                                   {item.name}{" "}
                                   {item.slug && (
-                                    <span className="#" style={{color:"gray"}}>
+                                    <span className="#" style={{ color: "gray" }}>
                                       ({item.slug})
                                     </span>
                                   )}
@@ -957,7 +957,7 @@ const Navbar = () => {
                               <i className="bx bx-heart"></i> قائمة الرغبات
                             </Link> */}
                             <div className="user-dropdown-divider"></div>
-                            <button 
+                            <button
                               className="user-dropdown-item text-danger"
                               onClick={(e) => { handleLogoutClick(e); closeCustomDropdown(); closeUserDropdown(); closeSidebar(); }}
                             >
@@ -986,7 +986,7 @@ const Navbar = () => {
               <li className="pe-1 logn user-icon-normal">
                 {isLoggedIn ? (
                   <Dropdown className="user-dropdown-nav" align="end" show={showUserDropdown} onToggle={setShowUserDropdown}>
-                    <Dropdown.Toggle as="a" href="#" className="p-0" style={{background: 'none', border: 'none'}}>
+                    <Dropdown.Toggle as="a" href="#" className="p-0" style={{ background: 'none', border: 'none' }}>
                       <span>
                         <i className="bx bx-user" style={{ fontSize: "25px" }}></i>
                       </span>
@@ -1121,7 +1121,7 @@ const Navbar = () => {
                             />
                             {item.name}{" "}
                             {item.slug && (
-                              <span className="#" style={{color:"gray"}}>({item.slug})</span>
+                              <span className="#" style={{ color: "gray" }}>({item.slug})</span>
                             )}
                           </div>
                         ))
@@ -1350,7 +1350,7 @@ const Navbar = () => {
                 </Dropdown.Menu>
               </Dropdown>
             </li>
-            
+
           </ul>
         </div>
       </header>

@@ -2434,7 +2434,7 @@ input[type="number"]::-webkit-inner-spin-button {
 
 .up:hover {
   bottom: 35px;
-  transform: scale(1.1);
+  /* transform: scale(1.1); */
 }
 
 .up.show {
