@@ -1,8 +1,12 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { CartWishlistContext } from "../App";
 import { Link } from "react-router-dom";
 
 const ShoppingCartSection = () => {
+  useEffect(() => {
+    document.title = "سلة التسوق";
+  }, []);
+
   const {
     cartItems,
     removeFromCart,
@@ -24,7 +28,7 @@ const ShoppingCartSection = () => {
   };
   const subtotal = cartItems.reduce(
     (acc, item) => acc + getPrice(item) * (item.quantity || 1),
-    0
+    0,
   );
 
   return (
@@ -91,7 +95,7 @@ const ShoppingCartSection = () => {
                           onClick={() =>
                             updateCartQuantity(
                               item.id,
-                              (item.quantity || 1) - 1
+                              (item.quantity || 1) - 1,
                             )
                           }
                           disabled={item.quantity <= 1}
@@ -106,7 +110,7 @@ const ShoppingCartSection = () => {
                           onClick={() =>
                             updateCartQuantity(
                               item.id,
-                              (item.quantity || 1) + 1
+                              (item.quantity || 1) + 1,
                             )
                           }
                         >
@@ -171,7 +175,10 @@ const ShoppingCartSection = () => {
                   {subtotal.toFixed(2)} ر.س
                 </span>
               </div>
-              <Link to="/PaymentmMethod" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+              <Link
+                to="/PaymentmMethod"
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              >
                 <button className="zelcashop-checkout-btn">اتمام الطلب</button>
               </Link>
             </div>

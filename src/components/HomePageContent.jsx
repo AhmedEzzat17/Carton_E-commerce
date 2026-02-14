@@ -13,6 +13,10 @@ export default function HomePageContent() {
   const [err, setErr] = useState(null);
 
   useEffect(() => {
+    document.title = "الصفحة الرئيسية";
+  }, []);
+
+  useEffect(() => {
     categoryService
       .get({ withAuth: false })
       .then((res) => {
