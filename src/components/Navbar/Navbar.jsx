@@ -9,7 +9,7 @@ import debounce from "lodash.debounce";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { Modal, Tab, Nav, Dropdown, Button } from "react-bootstrap";
-import logoImg from "../../assets/images/resize_image_686fe7da13ce4.png";
+import logoImg from "../../assets/images/cartony-removebg-preview.png";
 import Login from "../Auth/Login";
 import Register from "../Auth/Register";
 import { CartWishlistContext } from "../../App";
