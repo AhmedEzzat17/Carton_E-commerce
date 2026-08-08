@@ -34,6 +34,14 @@ const Dashboard = lazy(() => import("./A-Dashboard/Dashboard"));
 
 export const CartWishlistContext = createContext();
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [pathname]);
+  return null;
+}
+
 function HomePageContent() {
   return (
     <>
@@ -46,13 +54,16 @@ function HomePageContent() {
       <MostDemandedProducts title="مستلزمات الأكسسوارات" />
       <Features />
       <Testimonials />
+      <FAQSection />
     </>
   );
 }
 
 function AppContent() {
   const location = useLocation();
-  const isDashboardPage = location.pathname.startsWith("/Dashboard");
+  // جعل التحقق غير حساس لحالة الأحرف (Dashboard أو dashboard)
+  const isDashboardPage = location.pathname.toLowerCase().startsWith("/dashboard");
+  const isHomePage = location.pathname === "/";
 
   return (
     <>
@@ -60,7 +71,7 @@ function AppContent() {
       <AppRoutes />
       {!isDashboardPage && (
         <>
-          <FAQSection />
+          {isHomePage && <FAQSection />}
           {/* <ContactSection /> */}
           <Footer />
           <FloatingButtons />
@@ -144,8 +155,13 @@ function App() {
     setWishlistItems((prev) => prev.filter((item) => item.id !== product.id));
   };
 
+  // دالة تصفير السلة بالكامل
+  const clearCart = () => {
+    setCartItems([]);
+  };
+
   useEffect(() => {
-    AOS.init({ duration: 1500, once: true });
+    AOS.init({ duration: 1200, once: true });
   }, []);
 
   return (
@@ -158,6 +174,7 @@ function App() {
         addToWishlist,
         removeFromWishlist,
         updateCartQuantity, // توفير الدالة في السياق
+        clearCart, // دالة تصفير السلة
       }}
     >
       <Router>

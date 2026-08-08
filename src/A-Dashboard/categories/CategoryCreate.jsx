@@ -1,9 +1,11 @@
 // src/A-Dashboard/categories/CategoryCreate.js
 import React, { useState, useEffect } from "react";
 import CategoryService from "../../services/categoryService";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function CategoryCreate() {
+  const navigate = useNavigate();
+  
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -87,6 +89,11 @@ export default function CategoryCreate() {
         image: null,
       });
       setErrors({});
+      
+      // التحويل لصفحة الـ Show بعد 2 ثانية
+      setTimeout(() => {
+        navigate("/Dashboard/categories");
+      }, 2000);
     } catch (error) {
       setIsSuccess(false);
       if (error.response?.data?.errors) {
@@ -102,22 +109,35 @@ export default function CategoryCreate() {
 
   return (
     <div className="py-5" dir="rtl">
+      {/* رسالة النجاح/الخطأ فوق الشاشة */}
+      {serverMessage && (
+        <div
+          className={`alert ${isSuccess ? "alert-success" : "alert-danger"} text-center`}
+          style={{
+            position: "fixed",
+            top: "20px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 9999,
+            minWidth: "300px",
+            maxWidth: "500px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+          }}
+        >
+          {serverMessage}
+        </div>
+      )}
+      
       <div className="container">
         <div className="row justify-content-center">
           <div className="col-md-10">
             <div className="card shadow border-0 rounded-4">
-              <div className="card-header bg-primary text-white rounded-top-4">
+              <div className="card-header text-white rounded-top-4" style={{ backgroundColor: "var(--primary-color)" }}>
                 <h4 className="mb-0">
-                  <i className="bi bi-plus-circle me-2"></i> إضافة قسم جديد
+                  <i className="bi bi-plus-circle me-2" style={{ color: "#fff" }}></i> إضافة قسم جديد
                 </h4>
               </div>
               <div className="card-body bg-light">
-                {serverMessage && (
-                  <div className={`alert ${isSuccess ? "alert-success" : "alert-danger"} text-center`}>
-                    {serverMessage}
-                  </div>
-                )}
-
                 <form onSubmit={handleSubmit} encType="multipart/form-data">
                   <div className="row">
                     <div className="col-md-6 mb-3">
@@ -200,10 +220,10 @@ export default function CategoryCreate() {
 
                   <div className="d-flex justify-content-between">
                     <Link to="/Dashboard/categories" className="btn btn-secondary">
-                      <i className="bi bi-arrow-right me-1"></i> رجوع
+                      <i className="bi bi-arrow-right me-1" style={{ color: "#fff" }}></i> رجوع
                     </Link>
-                    <button type="submit" className="btn btn-primary">
-                      <i className="bi bi-check-circle me-1"></i> حفظ القسم
+                    <button type="submit" className="btn" style={{ backgroundColor: "var(--primary-color)", color: "#fff" }}>
+                      <i className="bi bi-check-circle me-1" style={{ color: "#fff" }}></i> حفظ القسم
                     </button>
                   </div>
                 </form>

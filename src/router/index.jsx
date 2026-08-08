@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import HomePageContent from "../components/HomePageContent";
 import ProductPage from "../pages/ProductPage";
 import FullRecentProductsPage from "../pages/FullRecentProductsPage";
@@ -17,9 +17,12 @@ import ProductEdit from "../A-Dashboard/products/ProductEdit";
 import ProductShow from "../A-Dashboard/products/ProductShow";
 import OrderShow from "../A-Dashboard/orders/OrderShow";
 import OrderDetails from "../A-Dashboard/orders/OrderDetails";
+import SpecialOrderShow from "../A-Dashboard/specialRequest/SpecialOrderShow";
+import SpecialOrderDetails from "../A-Dashboard/specialRequest/SpecialOrderDetails";
 import PaymentmMethod from "../pages/PaymentmMethod";
 import PrivateRoute from "./PrivateRoute";
 import ErrorPage from "../pages/ErrorPage";
+import Profile from "../pages/profile";
 const Dashboard = lazy(() => import("../A-Dashboard/Dashboard"));
 
 const AppRoutes = () => (
@@ -34,6 +37,7 @@ const AppRoutes = () => (
     <Route path="/category/:id" element={<CategoryProductsPage />} />
     <Route path="/ShoppingCartSection" element={<ShoppingCartSection />} />
     <Route path="/WishListSection" element={<WishListSection />} />
+    <Route path="/Profile" element={<Profile />} />
     {/* <Route path="/PaymentmMethod" element={<PaymentmMethod />} /> */}
     {/* صفحة الدفع لازم تسجيل دخول */}
     <Route element={<PrivateRoute />}>
@@ -53,7 +57,7 @@ const AppRoutes = () => (
 
     {/* حماية لوحة التحكم وكل صفحاتها للمستخدمين بصلاحية "admin" فقط */}
     <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
-      {/* <Route > */}
+      {/* دعم كلا من Dashboard و dashboard */}
       <Route
         path="/Dashboard"
         element={
@@ -74,7 +78,15 @@ const AppRoutes = () => (
         <Route path="products/edit/:id" element={<ProductEdit />} />
         <Route path="orders" element={<OrderShow />} />
         <Route path="orders/:id" element={<OrderDetails />} />
+        <Route path="special-orders" element={<SpecialOrderShow />} />
+        <Route path="special-orders/:id" element={<SpecialOrderDetails />} />
       </Route>
+      
+      {/* إعادة توجيه dashboard بحرف صغير إلى Dashboard بحرف كبير */}
+      <Route 
+        path="/dashboard/*" 
+        element={<Navigate to={window.location.pathname.replace('/dashboard', '/Dashboard')} replace />} 
+      />
     </Route>
   </Routes>
 );

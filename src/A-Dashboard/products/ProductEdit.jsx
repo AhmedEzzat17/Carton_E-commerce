@@ -128,12 +128,12 @@ export default function CategoryEdit() {
               <div
                 className="card-header rounded-top-4"
                 style={{
-                  background: "linear-gradient(90deg, #4e54c8, #8f94fb)",
+                  background: "var(--primary-color)",
                   color: "#fff",
                 }}
               >
                 <h4 className="mb-0">
-                  <i className="bi bi-pencil-square me-2"></i> تعديل بيانات القسم
+                  <i className="bi bi-pencil-square me-2" style={{ color :"#fff" }}></i> تعديل بيانات القسم
                 </h4>
               </div>
 
@@ -259,11 +259,11 @@ export default function CategoryEdit() {
                   <hr className="my-4" />
 
                   <div className="d-flex justify-content-between">
-                    <Link to="/Dashboard/categories" className="btn btn-outline-secondary">
-                      <i className="bi bi-arrow-right me-1"></i> رجوع
+                    <Link to="/Dashboard/categories" className="btn btn-secondary">
+                      <i className="bi bi-arrow-right me-1" style={{ color: "white" }}></i> رجوع
                     </Link>
-                    <button type="submit" className="btn btn-primary">
-                      <i className="bi bi-check-circle me-1"></i> حفظ التعديلات
+                    <button type="submit" className="btn" style={{ backgroundColor: "var(--primary-color)", color: "white" }}>
+                      <i className="bi bi-check-circle me-1" style={{ color: "white" }}></i> حفظ التعديلات
                     </button>
                   </div>
                 </form>

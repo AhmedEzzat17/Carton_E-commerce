@@ -80,6 +80,27 @@ export default function UserEdit() {
 
   return (
     <div className="py-5" dir="rtl" style={{ backgroundColor: "#f7f9fc" }}>
+      {/* رسالة النجاح/الخطأ فوق الشاشة */}
+      {serverMessage && (
+        <div
+          className={`alert text-center ${
+            messageType === "error" ? "alert-danger" : "alert-success"
+          }`}
+          style={{
+            position: "fixed",
+            top: "20px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 9999,
+            minWidth: "300px",
+            maxWidth: "500px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+          }}
+        >
+          {serverMessage}
+        </div>
+      )}
+      
       <div className="container">
         <div className="row justify-content-center">
           <div className="col-md-10">
@@ -87,26 +108,16 @@ export default function UserEdit() {
               <div
                 className="card-header rounded-top-4"
                 style={{
-                  background: "linear-gradient(90deg, #4e54c8, #8f94fb)",
+                  background: "var(--primary-color)",
                   color: "#fff",
                 }}
               >
                 <h4 className="mb-0">
-                  <i className="bi bi-pencil-square me-2"></i> تعديل بيانات المستخدم
+                  <i className="bi bi-pencil-square me-2" style={{ color: "#fff" }}></i> تعديل بيانات المستخدم
                 </h4>
               </div>
 
               <div className="card-body p-4">
-                {serverMessage && (
-                  <div
-                    className={`alert text-center ${
-                      messageType === "error" ? "alert-danger" : "alert-success"
-                    }`}
-                  >
-                    {serverMessage}
-                  </div>
-                )}
-
                 <form onSubmit={handleSubmit}>
                   <div className="row gy-3">
                     {/* الاسم */}
@@ -234,11 +245,11 @@ export default function UserEdit() {
                   <hr className="my-4" />
 
                   <div className="d-flex justify-content-between">
-                    <Link to="/Dashboard/users" className="btn btn-outline-secondary">
-                      <i className="bi bi-arrow-right me-1"></i> رجوع
+                    <Link to="/Dashboard/users" className="btn btn-secondary">
+                      <i className="bi bi-arrow-right me-1" style={{ color: "white" }}></i> رجوع
                     </Link>
-                    <button type="submit" className="btn btn-primary">
-                      <i className="bi bi-check-circle me-1"></i> تحديث المستخدم
+                    <button type="submit" className="btn" style={{ backgroundColor: "var(--primary-color)", color: "white" }}>
+                      <i className="bi bi-check-circle me-1" style={{ color: "white" }}></i> تحديث المستخدم
                     </button>
                   </div>
                 </form>

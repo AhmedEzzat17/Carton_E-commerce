@@ -11,6 +11,9 @@ const PaymentmMethod = () => {
   // رسالة نجاح الطلب
   const [orderSuccessMsg, setOrderSuccessMsg] = useState("");
 
+  // استخدام Context لتصفير السلة
+  const { clearCart } = useContext(CartWishlistContext);
+
   // دالة تجهيز وإرسال الطلب
   // دالة إرسال الطلب مع بيانات المودال
   const submitOrder = async ({
@@ -23,7 +26,11 @@ const PaymentmMethod = () => {
     try {
       const cartItemsLS = JSON.parse(localStorage.getItem("cartItems") || "[]");
       const cartNotes = JSON.parse(localStorage.getItem("cartNotes") || "{}");
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const userData = JSON.parse(localStorage.getItem("user") || "{}");
+      const user = userData.user || {}; // استخراج بيانات المستخدم الصحيحة
+
+      console.log("👤 بيانات المستخدم في PaymentMethod:", user);
+      console.log("🆔 user_id الذي سيتم إرساله:", user?.id);
 
       // تجهيز عناصر الطلب
       const order_items = cartItemsLS.map((item) => ({
@@ -37,13 +44,13 @@ const PaymentmMethod = () => {
       // حساب الإجمالي
       const total_amount = order_items.reduce(
         (acc, item) => acc + item.subtotal,
-        0
+        0,
       );
 
       // تجهيز بيانات الطلب الأساسية
       const orderData = {
         order_number: `ORD-${Math.floor(Math.random() * 100000)}`,
-        user_id: user?.id || 1,
+        user_id: user?.id || null, // لا نضع قيمة افتراضية خاطئة
         total_amount,
         status: "pending",
         notes: note || Object.values(cartNotes).join(" | ") || "",
@@ -56,6 +63,13 @@ const PaymentmMethod = () => {
         order_items,
       };
 
+      // تأكيد من وجود user_id صحيح
+      if (!orderData.user_id) {
+        console.error("❌ خطأ: لا يوجد user_id صحيح!");
+        console.log("👤 بيانات المستخدم المتاحة:", user);
+        throw new Error("لا يمكن إرسال الطلب بدون تسجيل الدخول");
+      }
+
       // طباعة قبل الإرسال
       console.log("Order JSON sent to backend:", {
         ...orderData,
@@ -65,14 +79,24 @@ const PaymentmMethod = () => {
       if (paymentMethod === "bank_transfer" && bankImage) {
         const formData = new FormData();
 
-        // الحقول العادية
+        // الحقول العادية - محسنة لضمان الحفظ الصحيح
         formData.append("order_number", orderData.order_number);
-        formData.append("user_id", orderData.user_id);
-        formData.append("total_amount", orderData.total_amount);
+        formData.append("user_id", String(orderData.user_id)); // تأكيد أنه string
+        formData.append("total_amount", String(orderData.total_amount));
         formData.append("status", orderData.status);
-        formData.append("notes", orderData.notes);
+        formData.append("notes", orderData.notes || "");
         formData.append("payment_method", orderData.payment_method);
         formData.append("shipping_address", orderData.shipping_address);
+
+        // إضافة بيانات المستخدم لضمان الفلترة في البروفايل
+        if (user.name) formData.append("user_name", user.name);
+        if (user.email) formData.append("user_email", user.email);
+        if (user.phone) formData.append("user_phone", user.phone);
+
+        console.log("📎 بيانات المستخدم المضافة لـ FormData:");
+        console.log("  user_name:", user.name);
+        console.log("  user_email:", user.email);
+        console.log("  user_phone:", user.phone);
 
         // order_items كـ Array
         orderData.order_items.forEach((item, index) => {
@@ -86,21 +110,36 @@ const PaymentmMethod = () => {
         // الملف
         formData.append("payment_receipt", bankImage);
 
-        await orderService.post(formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        // طباعة FormData للتشخيص
+        console.log("📎 FormData قبل الإرسال:");
+        for (let [key, value] of formData.entries()) {
+          console.log(`  ${key}:`, value);
+        }
+
+        // إرسال الطلب مع FormData
+        const response = await orderService.createOrder(formData);
+        console.log("✅ تم إرسال الطلب بنجاح (FormData):", response);
       } else {
-        // ⬅️ الدفع عند الاستلام → JSON عادي
-        await orderService.post(orderData, {
-          headers: { "Content-Type": "application/json" },
-        });
+        // الدفع عند الاستلام → JSON عادي
+        const response = await orderService.createOrder(orderData);
+        console.log("✅ تم إرسال الطلب بنجاح (JSON):", response);
       }
 
-      setOrderSuccessMsg("تم إضافة الطلب بنجاح 🎉 سيتم التواصل معك قريبًا!");
+      setOrderSuccessMsg("تم إضافة الطلب بنجاح سيتم التواصل معك قريبًا!");
 
       // مسح السلة والملاحظات بعد نجاح العملية
       localStorage.removeItem("cartItems");
       localStorage.removeItem("cartNotes");
+
+      // تصفير السلة في Context فوراً لتحديث العداد في Navbar
+      if (clearCart) {
+        clearCart();
+        console.log("🗑️ تم تصفير السلة في Context فوراً");
+      }
+
+      // إرسال إشارة لتحديث جميع المكونات
+      window.dispatchEvent(new CustomEvent("cartCleared"));
+      console.log("🔔 تم إرسال إشارة cartCleared");
     } catch (err) {
       console.error("Order submission error:", err.response?.data || err);
       setOrderSuccessMsg("حدث خطأ أثناء إرسال الطلب، يرجى المحاولة مرة أخرى.");
@@ -139,6 +178,10 @@ const PaymentmMethod = () => {
   const [bankAddressWarning, setBankAddressWarning] = useState("");
   const [bankFormSubmitted, setBankFormSubmitted] = useState(false);
 
+  useEffect(() => {
+    document.title = "إتمام الدفع";
+  }, []);
+
   function saveProductNote(productId, note) {
     const notes = JSON.parse(localStorage.getItem("cartNotes") || "{}");
     notes[productId] = note;
@@ -157,7 +200,7 @@ const PaymentmMethod = () => {
     ? getPrice(product) * (product.quantity || 1)
     : cartItems.reduce(
         (acc, item) => acc + getPrice(item) * (item.quantity || 1),
-        0
+        0,
       );
 
   const handleBankClick = () => {
@@ -235,15 +278,38 @@ const PaymentmMethod = () => {
 
   useEffect(() => {
     if (cashStep === 2) {
-      window.scrollTo(0, 0);
-      // تم إلغاء التحويل التلقائي بعد 3 ثواني بناءً على طلبك
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            // تأخير التنقل لتجنب مشكلة التحديث أثناء الرندر
+            setTimeout(() => {
+              navigate("/");
+            }, 100);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
     }
   }, [cashStep, navigate]);
 
   useEffect(() => {
     if (bankStep === 1) {
-      window.scrollTo(0, 0);
-      // تم إلغاء التحويل التلقائي بعد 3 ثواني بناءً على طلبك
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            navigate("/");
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
     }
   }, [bankStep, navigate]);
 
@@ -333,7 +399,7 @@ const PaymentmMethod = () => {
                         cashPhone.length > 12
                       ) {
                         setCashPhoneWarning(
-                          "رقم الهاتف يجب أن يكون من 11 إلى 12 رقمًا."
+                          "رقم الهاتف يجب أن يكون من 11 إلى 12 رقمًا.",
                         );
                         valid = false;
                       } else {
@@ -344,7 +410,7 @@ const PaymentmMethod = () => {
                         valid = false;
                       } else if (cashAddress.trim().length < 5) {
                         setCashAddressWarning(
-                          "العنوان يجب أن يحتوي على 5 حروف على الأقل."
+                          "العنوان يجب أن يحتوي على 5 حروف على الأقل.",
                         );
                         valid = false;
                       } else {
@@ -380,7 +446,7 @@ const PaymentmMethod = () => {
                             setCashPhone(value);
                             if (value.length < 11 || value.length > 12) {
                               setCashPhoneWarning(
-                                "رقم الهاتف يجب أن يكون من 11 إلى 12 رقمًا."
+                                "رقم الهاتف يجب أن يكون من 11 إلى 12 رقمًا.",
                               );
                             } else {
                               setCashPhoneWarning("");
@@ -414,7 +480,7 @@ const PaymentmMethod = () => {
                             setCashAddress(value);
                             if (value.trim().length < 5) {
                               setCashAddressWarning(
-                                "العنوان يجب أن يحتوي على 5 حروف على الأقل."
+                                "العنوان يجب أن يحتوي على 5 حروف على الأقل.",
                               );
                             } else {
                               setCashAddressWarning("");
@@ -561,7 +627,7 @@ const PaymentmMethod = () => {
                   valid = false;
                 } else if (bankPhone.length < 11 || bankPhone.length > 12) {
                   setBankPhoneWarning(
-                    "رقم الهاتف يجب أن يكون من 11 إلى 12 رقمًا."
+                    "رقم الهاتف يجب أن يكون من 11 إلى 12 رقمًا.",
                   );
                   valid = false;
                 } else {
@@ -572,7 +638,7 @@ const PaymentmMethod = () => {
                   valid = false;
                 } else if (bankAddress.trim().length < 5) {
                   setBankAddressWarning(
-                    "العنوان يجب أن يحتوي على 5 حروف على الأقل."
+                    "العنوان يجب أن يحتوي على 5 حروف على الأقل.",
                   );
                   valid = false;
                 } else {
@@ -694,7 +760,7 @@ const PaymentmMethod = () => {
                       setBankPhone(value);
                       if (value.length < 11 || value.length > 12) {
                         setBankPhoneWarning(
-                          "رقم الهاتف يجب أن يكون من 11 إلى 12 رقمًا."
+                          "رقم الهاتف يجب أن يكون من 11 إلى 12 رقمًا.",
                         );
                       } else {
                         setBankPhoneWarning("");
@@ -727,7 +793,7 @@ const PaymentmMethod = () => {
                       setBankAddress(value);
                       if (value.trim().length < 5) {
                         setBankAddressWarning(
-                          "العنوان يجب أن يحتوي على 5 حروف على الأقل."
+                          "العنوان يجب أن يحتوي على 5 حروف على الأقل.",
                         );
                       } else {
                         setBankAddressWarning("");

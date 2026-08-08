@@ -220,7 +220,7 @@ export default function MostDemandedProducts({ category }) {
                       src={imgSrc}
                       className="img-fluid shadow-sm"
                       alt={product.name}
-                      onClick={() => window.scrollTo(0, 0)}
+                      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                       loading="lazy"
                     />
                   </Link>
@@ -228,7 +228,7 @@ export default function MostDemandedProducts({ category }) {
                   <h6 className="mt-4 mb-0 fw-bold">
                     <Link
                       to={`/productPage/${product.id}`}
-                      onClick={() => window.scrollTo(0, 0)}
+                      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                     >
                       {product.name}
                     </Link>

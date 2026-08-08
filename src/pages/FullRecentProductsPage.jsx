@@ -17,12 +17,16 @@ export default function FullRecentProductsPage() {
   } = useContext(CartWishlistContext);
 
   useEffect(() => {
+    document.title = "ما نزل مؤخراً";
+  }, []);
+
+  useEffect(() => {
     ProductService.get()
       .then((res) => {
         if (res.data?.status && Array.isArray(res.data.data?.data)) {
           // ترتيب المنتجات بالأحدث
           const sorted = res.data.data.data.sort(
-            (a, b) => new Date(b.created_at) - new Date(a.created_at)
+            (a, b) => new Date(b.created_at) - new Date(a.created_at),
           );
           setProducts(sorted); // عرض كل المنتجات
         }
@@ -42,7 +46,10 @@ export default function FullRecentProductsPage() {
 
   return (
     <>
-      <div className="section-title text-center mt-5" data-aos="fade-down">
+      <div
+        className="section-title recent-title text-center mt-5"
+        data-aos="fade-down"
+      >
         <h2>ما نزل مؤخرًا</h2>
         <div className="title-underline mx-auto" data-aos="fade-down"></div>
       </div>
@@ -64,7 +71,7 @@ export default function FullRecentProductsPage() {
             }
             const inCart = cartItems.some((item) => item.id === product.id);
             const inWishlist = wishlistItems.some(
-              (item) => item.id === product.id
+              (item) => item.id === product.id,
             );
             return (
               <div key={product.id} className="col-md-3 col-sm-6 mb-4 z-0">
@@ -81,7 +88,9 @@ export default function FullRecentProductsPage() {
                         <img
                           src={imgSrc}
                           alt={product.name}
-                          onClick={() => window.scrollTo(0, 0)}
+                          onClick={() =>
+                            window.scrollTo({ top: 0, behavior: "smooth" })
+                          }
                         />
                       </div>
                     </Link>
@@ -116,13 +125,13 @@ export default function FullRecentProductsPage() {
                       >
                         <i className="far fa-heart"></i>
                       </button>
-                      <button
+                      {/* <button
                         type="button"
                         className="icon-btn"
                         title="Quick View"
                       >
                         <i className="fas fa-eye"></i>
-                      </button>
+                      </button> */}
                     </div>
                   </div>
 

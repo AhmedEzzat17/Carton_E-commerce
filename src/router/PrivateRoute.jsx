@@ -138,7 +138,7 @@ const PrivateRoute = ({ allowedRoles }) => {
               textAlign: 'center'
             }}>
               <h3 style={{
-                color: '#407C7C',
+                color: 'red',
                 fontSize: '1.5rem',
                 fontWeight: '700',
                 marginBottom: '15px',

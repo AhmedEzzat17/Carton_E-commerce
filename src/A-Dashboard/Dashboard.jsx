@@ -144,7 +144,7 @@ function Dashboard() {
         <ul className="side-menu scroll-hidden">
           <li>
             <Link
-              to="/orders"
+              to="/Dashboard"
               onClick={(e) => handleMenuItemClick(e, "home")}
               className={`menu-item ${
                 activeMenuItem === "home" ? "active" : ""
@@ -241,6 +241,18 @@ function Dashboard() {
             </Link>
 
           </li>
+          {/* <li>
+            <Link
+              to="/Dashboard/special-orders"
+              onClick={(e) => handleMenuItemClick(e, "special-orders")}
+              className={`menu-item ${
+                activeMenuItem === "special-orders" ? "active" : ""
+              }`}
+              id="special-orders"
+            >
+              <i className="bx bxs-package icon"></i> الطلبات الخاصة
+            </Link>
+          </li> */}
           <li>
             <Link
               onClick={()=>{

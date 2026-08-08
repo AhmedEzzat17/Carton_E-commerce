@@ -1,9 +1,13 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { CartWishlistContext } from "../../App";
 import "../../assets/css/style.css";
 import { Link } from "react-router-dom";
 
 const FavoritesPage = () => {
+  useEffect(() => {
+    document.title = "المفضلات";
+  }, []);
+
   const {
     wishlistItems,
     cartItems,
@@ -29,7 +33,7 @@ const FavoritesPage = () => {
           wishlistItems.map((product) => {
             const inCart = cartItems.some((item) => item.id === product.id);
             const inWishlist = wishlistItems.some(
-              (item) => item.id === product.id
+              (item) => item.id === product.id,
             );
             return (
               <div key={product.id} className="col-md-3 col-sm-6 mb-4 z-0">
@@ -42,13 +46,30 @@ const FavoritesPage = () => {
                   <div className="img-container">
                     <Link to={`/productPage/${product.id}`}>
                       <img
-                        src={
-                          product.main_image
-                            ? `${product.main_image}`
-                            : fallbackImage
-                        }
+                        src={(() => {
+                          // نظام شامل لعرض الصور مثل MostDemandedProducts
+                          if (product.main_image) {
+                            return product.main_image;
+                          } else if (
+                            Array.isArray(product.images) &&
+                            product.images.length > 0
+                          ) {
+                            // لو images Array وفيها full_url
+                            return product.images[0]?.full_url || fallbackImage;
+                          } else if (
+                            typeof product.images === "string" &&
+                            product.images
+                          ) {
+                            // لو images string (مثل RecentProducts)
+                            return `https://myappapi.fikriti.com/${product.images}`;
+                          }
+                          return fallbackImage;
+                        })()}
                         alt={product.name}
-                        onClick={() => window.scrollTo(0, 0)}
+                        onClick={() =>
+                          window.scrollTo({ top: 0, behavior: "smooth" })
+                        }
+                        loading="lazy"
                       />
                     </Link>
                     <div className="hover-icons">

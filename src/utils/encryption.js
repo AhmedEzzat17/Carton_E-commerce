@@ -1,6 +1,6 @@
 import CryptoJS from "crypto-js";
 
-const SECRET_KEY = "fikriti-secret-key-2025"; // غيرها لحاجة خاصة بيك واحتفظ بيها سرية
+const SECRET_KEY = "fikriti-secret-key-2025";
 
 // تشفير
 export const encryptData = (data) => {

@@ -1,14 +1,23 @@
-import React, { useState, useEffect, useRef, useContext, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useContext,
+  useCallback,
+} from "react";
 import debounce from "lodash.debounce";
-import productService from "../../services/interface/productService";
+import axios from "axios";
 import { Link } from "react-router-dom";
 import { Modal, Tab, Nav, Dropdown, Button } from "react-bootstrap";
-import logoImg from "../../assets/images/resize_image_686fe7da13ce4.png";
+import logoImg from "../../assets/images/cartony-removebg-preview.png";
 import Login from "../Auth/Login";
 import Register from "../Auth/Register";
 import { CartWishlistContext } from "../../App";
 
 const Navbar = () => {
+  // Refs
+  const dropdownRef = useRef(null);
+  const buttonRef = useRef(null);
   const [showSearchPopup, setShowSearchPopup] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -17,33 +26,83 @@ const Navbar = () => {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const searchContainerRef = useRef(null);
   const [showCart, setShowCart] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("user"));
   const [isScrolled, setIsScrolled] = useState(false);
+  const [activeNavItem, setActiveNavItem] = useState("الصفحة الرئيسية");
 
   const { cartItems, wishlistItems, addToCart, removeFromWishlist } =
     useContext(CartWishlistContext);
+
+  // مستمع لتصفير السلة
+  useEffect(() => {
+    const handleCartCleared = () => {
+      console.log("🔔 Navbar: تم استلام إشارة cartCleared");
+      // العداد سيتحدث تلقائياً لأن cartItems من Context
+    };
+
+    window.addEventListener("cartCleared", handleCartCleared);
+    return () => window.removeEventListener("cartCleared", handleCartCleared);
+  }, []);
 
   // جلب الفئات من الـ API
   const [categories, setCategories] = useState([]);
   useEffect(() => {
     async function fetchCategories() {
       try {
-        // غيّر الرابط حسب الـ endpoint الخاص بالفئات في مشروعك
-        const res = await productService.get({
-          withAuth: false,
-          params: { type: "categories" },
-        });
-        if (res.data?.status && Array.isArray(res.data.data?.data)) {
-          setCategories(res.data.data.data);
+        // استخدام axios مباشرة بدلاً من productService
+        const response = await axios.get(
+          `https://myappapi.fikriti.com/api/v1/interface/products`,
+          {
+            params: {
+              type: "categories",
+            },
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          },
+        );
+
+        console.log("API Response:", response.data);
+        if (response.data?.status && Array.isArray(response.data.data?.data)) {
+          setCategories(response.data.data.data);
         } else {
           setCategories([]);
         }
-      } catch {
+      } catch (error) {
+        console.error("Categories fetch error:", error);
         setCategories([]);
       }
     }
     fetchCategories();
+  }, []);
+
+  // تحديد العنصر النشط بناءً على المسار الحالي عند التحميل
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+    const currentHash = window.location.hash;
+
+    // إذا كنا في صفحة غير الصفحة الرئيسية، لا نعرض active
+    if (currentPath !== "/") {
+      setActiveNavItem(""); // إخفاء الـ active
+      return;
+    }
+
+    // فقط عند التحميل الأول في الصفحة الرئيسية، إذا كان هناك hash في الرابط
+    if (currentHash) {
+      if (currentHash === "#one") {
+        setActiveNavItem("ما نزل مؤخرأ");
+      } else if (currentHash === "#categories") {
+        setActiveNavItem("الأقسام");
+      } else if (currentHash === "#faq-section-wrapper") {
+        setActiveNavItem("الأسئلة الشائعة");
+      }
+    } else {
+      setActiveNavItem("الصفحة الرئيسية");
+    }
+    // بعد كده الـ scroll spy هيتولى المهمة
   }, []);
 
   useEffect(() => {
@@ -60,21 +119,89 @@ const Navbar = () => {
 
   // Scroll detection for mobile navbar changes
   useEffect(() => {
+    let lastScrollTop = 0;
     const handleScroll = () => {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      setIsScrolled(scrollTop > 50);
+      const scrollTop =
+        window.pageYOffset || document.documentElement.scrollTop;
+
+      // منطق الهيستريسيس لمنع التبديل السريع في المنتصف
+      if (scrollTop > 50 && !isScrolled) {
+        // الانتقال من الحالة العلوية للسفلية عند 50 بكسل
+        setIsScrolled(true);
+      } else if (scrollTop < 30 && isScrolled) {
+        // العودة من السفلية للعلوية عند 30 بكسل فقط
+        setIsScrolled(false);
+      }
+
+      lastScrollTop = scrollTop;
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isScrolled]);
+
+  // Scroll Spy - تتبع القسم النشط أثناء التمرير
+  useEffect(() => {
+    const handleScrollSpy = () => {
+      // التحقق من أننا في الصفحة الرئيسية فقط
+      const currentPath = window.location.pathname;
+      if (currentPath !== "/") {
+        setActiveNavItem(""); // إخفاء الـ active في الصفحات الأخرى
+        return;
+      }
+
+      const scrollPosition = window.scrollY + 150; // offset للنافبار
+
+      // تحديد الأقسام المراد تتبعها
+      const sections = [
+        { id: "one", name: "ما نزل مؤخرأ" },
+        { id: "categories", name: "الأقسام" },
+        { id: "faq-section-wrapper", name: "الأسئلة الشائعة" },
+      ];
+
+      // إذا كنا في أعلى الصفحة
+      if (window.scrollY < 60) {
+        setActiveNavItem("الصفحة الرئيسية");
+        return;
+      }
+
+      // البحث عن القسم النشط
+      let currentSection = "الصفحة الرئيسية";
+
+      for (const section of sections) {
+        const element = document.getElementById(section.id);
+        if (element) {
+          const offsetTop = element.offsetTop;
+          const offsetBottom = offsetTop + element.offsetHeight;
+
+          if (scrollPosition >= offsetTop && scrollPosition < offsetBottom) {
+            currentSection = section.name;
+            break;
+          }
+        }
+      }
+
+      setActiveNavItem(currentSection);
+    };
+
+    // تشغيل عند التحميل
+    handleScrollSpy();
+
+    // تشغيل عند التمرير
+    window.addEventListener("scroll", handleScrollSpy);
+    return () => window.removeEventListener("scroll", handleScrollSpy);
   }, []);
 
   useEffect(() => {
     const body = document.body;
     if (showLoginModal) {
       body.classList.add("dimmed-bg");
+      // منع scroll على الصفحة لما Modal يكون مفتوح
+      body.style.overflow = "hidden";
     } else {
       body.classList.remove("dimmed-bg");
+      // إرجاع scroll للصفحة لما Modal يتقفل
+      body.style.overflow = "auto";
     }
   }, [showLoginModal]);
 
@@ -84,10 +211,10 @@ const Navbar = () => {
       setShowLoginModal(true);
     };
 
-    window.addEventListener('openLoginModal', handleOpenLoginModal);
-    
+    window.addEventListener("openLoginModal", handleOpenLoginModal);
+
     return () => {
-      window.removeEventListener('openLoginModal', handleOpenLoginModal);
+      window.removeEventListener("openLoginModal", handleOpenLoginModal);
     };
   }, []);
 
@@ -99,25 +226,52 @@ const Navbar = () => {
         setShowSuggestions(false);
         return;
       }
-      // Fetch products from the API
+      // Fetch products from the API using the new endpoint
       try {
-        const res = await productService.get({
-          withAuth: false,
-          params: { search: query },
-        });
-        if (res.data?.status && Array.isArray(res.data.data?.data)) {
-          setSearchSuggestions(res.data.data.data);
+        const response = await axios.get(
+          `https://myappapi.fikriti.com/api/v1/interface/products`,
+          {
+            params: {
+              search: query,
+              perPage: 10,
+            },
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          },
+        );
+
+        if (response.data?.status && response.data?.data?.data) {
+          const products = response.data.data.data.map((product) => ({
+            id: product.id,
+            name: product.name,
+            slug: product.slug,
+            price: product.price,
+            main_image: product.images
+              ? `https://myappapi.fikriti.com/${product.images}`
+              : null,
+            images:
+              product.productimages && product.productimages.length > 0
+                ? product.productimages.map((img) => ({
+                    full_url: `https://myappapi.fikriti.com/${img.url}`,
+                    alt: img.alt_text,
+                  }))
+                : [],
+          }));
+          setSearchSuggestions(products);
         } else {
           setSearchSuggestions([]);
         }
         setShowSuggestions(true);
         setIsSearchExpanded(true);
-      } catch {
+      } catch (error) {
+        console.error("Search API Error:", error);
         setSearchSuggestions([]);
         setShowSuggestions(false);
       }
     }, 300), // 300ms delay
-    []
+    [],
   );
 
   // Handle search input change
@@ -142,19 +296,76 @@ const Navbar = () => {
     setShowSearchPopup(true);
   };
 
+  // إغلاق القائمة المنسدلة عند النقر في أي مكان بالصفحة
+  useEffect(() => {
+    const handleClickAnywhere = (event) => {
+      const menu = document.querySelector(".user-dropdown-custom");
+      const button = document.getElementById("userDropdown");
+
+      // إذا كان النقر خارج القائمة وخارج الزر
+      if (
+        menu &&
+        button &&
+        !menu.contains(event.target) &&
+        !button.contains(event.target)
+      ) {
+        menu.classList.remove("show");
+      }
+    };
+
+    // إضافة مستمع الأحداث للصفحة كاملة
+    document.addEventListener("click", handleClickAnywhere);
+
+    // تنظيف مستمع الأحداث عند إلغاء التثبيت
+    return () => {
+      document.removeEventListener("click", handleClickAnywhere);
+    };
+  }, []);
+
   const handleLoginClick = (e) => {
     e.preventDefault();
     setShowLoginModal(true);
   };
 
-  // دالة إغلاق القائمة الجانبية
-  const closeSidebar = () => {
-    const offcanvasElement = document.getElementById('bdNavbar');
+  // Add event listener for logout from other components
+  React.useEffect(() => {
+    const handleShowLogoutModal = () => {
+      setShowLogoutModal(true);
+    };
+
+    document.addEventListener("showLogoutModal", handleShowLogoutModal);
+
+    return () => {
+      document.removeEventListener("showLogoutModal", handleShowLogoutModal);
+    };
+  }, []);
+
+  // دالة إغلاق القائمة الجانبية وتحديث العنصر النشط
+  const closeSidebar = (navItem = null) => {
+    const offcanvasElement = document.getElementById("bdNavbar");
     if (offcanvasElement) {
-      const offcanvas = window.bootstrap?.Offcanvas?.getInstance(offcanvasElement);
+      const offcanvas =
+        window.bootstrap?.Offcanvas?.getInstance(offcanvasElement);
       if (offcanvas) {
         offcanvas.hide();
       }
+    }
+    // تحديث العنصر النشط إذا تم تمرير اسم العنصر
+    if (navItem) {
+      setActiveNavItem(navItem);
+    }
+  };
+
+  // دالة إغلاق القائمة المنسدلة للمستخدم
+  const closeUserDropdown = () => {
+    setShowUserDropdown(false);
+  };
+
+  // دالة إغلاق القائمة المخصصة للمستخدم
+  const closeCustomDropdown = () => {
+    const menu = document.querySelector(".user-dropdown-custom");
+    if (menu) {
+      menu.classList.remove("show");
     }
   };
   const handleLogoutClick = (e) => {
@@ -301,14 +512,20 @@ const Navbar = () => {
           </div>
         </div>
 
-        <nav id="header-nav" className={`navbar navbar-expand-lg ${isScrolled ? 'navbar-scrolled' : ''}`}>
+        <nav
+          id="header-nav"
+          className={`navbar navbar-expand-lg ${isScrolled ? "navbar-scrolled" : ""}`}
+        >
           <div className="container">
-            <a className={`navbar-brand res-logo ${isScrolled ? 'logo-hidden' : ''}`} href="/">
+            <a
+              className={`navbar-brand res-logo ${isScrolled ? "logo-hidden" : ""}`}
+              href="/"
+            >
               <img src={logoImg} className="logo" alt="Logo" />
             </a>
 
             <button
-              className={`navbar-toggler d-flex d-lg-none order-3 p-2 ${isScrolled ? 'hamburger-hidden' : ''}`}
+              className={`navbar-toggler d-flex d-lg-none order-3 p-2 ${isScrolled ? "hamburger-hidden" : ""}`}
               type="button"
               data-bs-toggle="offcanvas"
               data-bs-target="#bdNavbar"
@@ -347,25 +564,49 @@ const Navbar = () => {
                   className="navbar-nav text-uppercase justify-content-start justify-content-lg-start align-items-start align-items-lg-center flex-grow-1"
                 >
                   <li className="nav-item">
-                    <a className="nav-link me-3 active" href="/" onClick={closeSidebar}>
+                    <a
+                      className={`nav-link me-3 ${activeNavItem === "الصفحة الرئيسية" ? "active" : ""}`}
+                      href="/"
+                      onClick={() => closeSidebar("الصفحة الرئيسية")}
+                    >
                       الصفحة الرئيسية
                     </a>
                   </li>
                   <li className="nav-item">
-                    <a className="nav-link me-3" href="/#one" onClick={closeSidebar}>
+                    <a
+                      className={`nav-link me-3 ${activeNavItem === "ما نزل مؤخرأ" ? "active" : ""}`}
+                      href="/#one"
+                      onClick={() => closeSidebar("ما نزل مؤخرأ")}
+                    >
                       ما نزل مؤخرأ
                     </a>
                   </li>
                   <li className="nav-item">
-                    <a className="nav-link me-3" href="/#categories" onClick={closeSidebar}>
+                    <a
+                      className={`nav-link me-3 ${activeNavItem === "الأقسام" ? "active" : ""}`}
+                      href="/#categories"
+                      onClick={() => closeSidebar("الأقسام")}
+                    >
                       الأقسام
                     </a>
                   </li>
                   <li className="nav-item">
-                    <a className="nav-link me-3" href="/#faq-section-wrapper" onClick={closeSidebar}>
-                    الأسئلة الشائعة
+                    <a
+                      className={`nav-link me-3 ${activeNavItem === "الأسئلة الشائعة" ? "active" : ""}`}
+                      href="/#faq-section-wrapper"
+                      onClick={() => closeSidebar("الأسئلة الشائعة")}
+                    >
+                      الأسئلة الشائعة
                     </a>
                   </li>
+
+                  {/* {!isLoggedIn ? null : (
+                    <li className="nav-item">
+                      <a className="nav-link me-3" href="#" onClick={handleLogoutClick}>
+                        تسجيل الخروج
+                      </a>
+                    </li>
+                  )} */}
 
                   {/* <Dropdown as="li" className="nav-item">
                     <Dropdown.Toggle
@@ -408,7 +649,6 @@ const Navbar = () => {
                       تواصل معنا
                     </a>
                   </li> */}
-                  
                 </ul>
 
                 {/* شريط البحث الرئيسي */}
@@ -448,7 +688,7 @@ const Navbar = () => {
                           borderRadius: "50%",
                           width: "40px",
                           height: "40px",
-                          padding: "0",
+                          padding: "17px",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -475,7 +715,7 @@ const Navbar = () => {
                           {searchSuggestions.length > 0 ? (
                             searchSuggestions
                               .filter(
-                                (item) => typeof item === "object" && item.name
+                                (item) => typeof item === "object" && item.name,
                               )
                               .map((item) => (
                                 <div
@@ -508,7 +748,10 @@ const Navbar = () => {
                                   />
                                   {item.name}{" "}
                                   {item.slug && (
-                                    <span className="text-muted">
+                                    <span
+                                      className="#"
+                                      style={{ color: "gray" }}
+                                    >
                                       ({item.slug})
                                     </span>
                                   )}
@@ -625,6 +868,7 @@ const Navbar = () => {
                             onClick={() => {
                               setShow(false);
                               closeSidebar();
+                              window.scrollTo({ top: 0, behavior: "smooth" });
                             }}
                           >
                             عرض قائمة رغباتك
@@ -738,6 +982,7 @@ const Navbar = () => {
                             onClick={() => {
                               setShowCart(false);
                               closeSidebar();
+                              window.scrollTo({ top: 0, behavior: "smooth" });
                             }}
                           >
                             عرض السلة
@@ -746,7 +991,7 @@ const Navbar = () => {
                             to="/PaymentmMethod"
                             className="w-100 btn btn-primary"
                             onClick={() => {
-                              window.scrollTo(0, 0);
+                              window.scrollTo({ top: 0, behavior: "smooth" });
                               setShowCart(false);
                               closeSidebar();
                             }}
@@ -758,33 +1003,103 @@ const Navbar = () => {
                     </Dropdown>
 
                     {/* user */}
-                    <li className="pe-1 logn">
+                    <li className="pe-1 logn" style={{ position: "relative" }}>
                       {isLoggedIn ? (
-                        <Link
-                          href="#"
-                          onClick={handleLogoutClick}
-                          // className="logout-link"
-                          aria-label="Log out"
-                          // onClick={confirmLogout}
-                          className="bg-danger"
-                        >
-                          <span>
-                            تسجيل خروج
-                            <i
-                              className="bx bx-log-out me-1"
-                              style={{ fontSize: "20px", marginRight: "5px" }}
-                            ></i>
-                          </span>
-                        </Link>
+                        <div className="user-profile-container">
+                          <button
+                            ref={buttonRef}
+                            className="user-profile-btn-custom"
+                            id="userDropdown"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              const menu = document.querySelector(
+                                ".user-dropdown-custom",
+                              );
+                              menu.classList.toggle("show");
+                            }}
+                            aria-expanded="false"
+                          >
+                            <span>مرحباً</span>
+                            <span className="user-profile-name">
+                              {(() => {
+                                try {
+                                  const userData = JSON.parse(
+                                    localStorage.getItem("user"),
+                                  );
+                                  const userName =
+                                    userData?.user?.name || "المستخدم";
+                                  return userName.split(" ")[0].length <= 10
+                                    ? userName.split(" ")[0]
+                                    : `${userName.substring(0, 10)}...`;
+                                } catch {
+                                  return "المستخدم";
+                                }
+                              })()}
+                            </span>
+                            <i className="bx bx-user"></i>
+                          </button>
+                          <div
+                            ref={dropdownRef}
+                            className="user-dropdown-custom"
+                            id="userDropdownMenu"
+                          >
+                            <div className="user-dropdown-header">
+                              <i className="bx bx-user ms-2"></i>
+                              <span>
+                                {(() => {
+                                  try {
+                                    const userData = JSON.parse(
+                                      localStorage.getItem("user"),
+                                    );
+                                    return userData?.user?.name || "المستخدم";
+                                  } catch {
+                                    return "المستخدم";
+                                  }
+                                })()}
+                              </span>
+                            </div>
+                            <div className="user-dropdown-divider"></div>
+                            <Link
+                              className="user-dropdown-item"
+                              to="/Profile"
+                              onClick={() => {
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                                closeCustomDropdown();
+                                closeUserDropdown();
+                                closeSidebar();
+                              }}
+                            >
+                              <i className="bx bx-user"></i> الملف الشخصي
+                            </Link>
+                            {/* <Link className="user-dropdown-item" to="/orders">
+                              <i className="bx bx-package"></i> طلباتي
+                            </Link>
+                            <Link className="user-dropdown-item" to="/wishlist">
+                              <i className="bx bx-heart"></i> قائمة الرغبات
+                            </Link> */}
+                            <div className="user-dropdown-divider"></div>
+                            <button
+                              className="user-dropdown-item text-danger"
+                              onClick={(e) => {
+                                handleLogoutClick(e);
+                                closeCustomDropdown();
+                                closeUserDropdown();
+                                closeSidebar();
+                              }}
+                            >
+                              <i className="bx bx-log-out"></i> تسجيل خروج
+                            </button>
+                          </div>
+                        </div>
                       ) : (
-                        <a href="#" onClick={handleLoginClick}>
-                          <span>
-                            تسجيل دخول
-                            <i
-                              className="bx bx-user me-1"
-                              style={{ fontSize: "20px" }}
-                            ></i>
-                          </span>
+                        <a
+                          href="#"
+                          onClick={handleLoginClick}
+                          className="login-btn-custom d-none d-lg-inline-flex"
+                        >
+                          <span>تسجيل دخول</span>
+                          <i className="bx bx-user"></i>
                         </a>
                       )}
                     </li>
@@ -795,16 +1110,69 @@ const Navbar = () => {
           </div>
         </nav>
         {/* Responsive navbar for screens < 991px */}
-        <div className={`navbar-mobile d-flex d-lg-none w-100 ${isScrolled ? 'scrolled' : ''}`}>
+        <div
+          className={`navbar-mobile d-flex d-lg-none w-100 ${isScrolled ? "scrolled" : ""}`}
+        >
           <ul className="d-flex align-items-center justify-content-between w-100 mb-0 ">
             {/* user icon - shows when not scrolled */}
             {!isScrolled && (
               <li className="pe-1 logn user-icon-normal">
-                <a href="#" onClick={handleLoginClick}>
-                  <span>
-                    <i className="bx bx-user" style={{ fontSize: "25px" }}></i>
-                  </span>
-                </a>
+                {isLoggedIn ? (
+                  <Dropdown
+                    className="user-dropdown-nav"
+                    align="end"
+                    show={showUserDropdown}
+                    onToggle={setShowUserDropdown}
+                  >
+                    <Dropdown.Toggle
+                      as="a"
+                      href="#"
+                      className="p-0"
+                      style={{ background: "none", border: "none" }}
+                    >
+                      <span>
+                        <i
+                          className="bx bx-user"
+                          style={{ fontSize: "25px" }}
+                        ></i>
+                      </span>
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu className="user-dropdown-menu">
+                      <Dropdown.Item
+                        as={Link}
+                        to="/Profile"
+                        onClick={() => {
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                          closeUserDropdown();
+                          closeSidebar();
+                        }}
+                      >
+                        <i className="bx bx-user me-2"></i> الملف الشخصي
+                      </Dropdown.Item>
+                      <Dropdown.Divider />
+                      <Dropdown.Item
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setShowLogoutModal(true);
+                          closeUserDropdown();
+                          closeSidebar();
+                        }}
+                        className="text-danger"
+                      >
+                        <i className="bx bx-log-out me-2"></i> تسجيل الخروج
+                      </Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                ) : (
+                  <a href="#" onClick={handleLoginClick}>
+                    <span>
+                      <i
+                        className="bx bx-user"
+                        style={{ fontSize: "25px" }}
+                      ></i>
+                    </span>
+                  </a>
+                )}
               </li>
             )}
 
@@ -827,7 +1195,9 @@ const Navbar = () => {
             )}
 
             {/* search */}
-            <li className={`mobile-search-container ${isScrolled ? 'scrolled' : 'full-width'}`}>
+            <li
+              className={`mobile-search-container ${isScrolled ? "scrolled" : "full-width"}`}
+            >
               <div
                 className="navbar-mobile-search"
                 style={{
@@ -913,7 +1283,9 @@ const Navbar = () => {
                             />
                             {item.name}{" "}
                             {item.slug && (
-                              <span className="text-muted">({item.slug})</span>
+                              <span className="#" style={{ color: "gray" }}>
+                                ({item.slug})
+                              </span>
                             )}
                           </div>
                         ))
@@ -1002,6 +1374,7 @@ const Navbar = () => {
                       onClick={() => {
                         setShow(false);
                         closeSidebar();
+                        window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
                     >
                       عرض قائمة رغباتك
@@ -1017,7 +1390,6 @@ const Navbar = () => {
                 </Dropdown.Menu>
               </Dropdown>
             </li>
-
 
             {/* cart */}
             <li>
@@ -1066,7 +1438,7 @@ const Navbar = () => {
 
                   <ul
                     className="list-group mb-3"
-                    style={{ maxHeight: "260px", overflowY: "auto" }}
+                    style={{ maxHeight: "260px", overflowX: "auto" }}
                   >
                     {cartItems.length === 0 ? (
                       <li className="list-group-item text-center">
@@ -1121,6 +1493,7 @@ const Navbar = () => {
                       onClick={() => {
                         setShowCart(false);
                         closeSidebar();
+                        window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
                     >
                       عرض السلة
@@ -1142,270 +1515,6 @@ const Navbar = () => {
           </ul>
         </div>
       </header>
-
-      <style jsx>{`
-        .offcanvas-backdrop.show {
-          opacity: 0 !important;
-        }
-        .search-container {
-          position: relative;
-          margin: 0 0px;
-        }
-
-        .search-input {
-          width: 100%;
-          border-radius: 30px;
-          background: #f0ffff97;
-          transition: all 0.3s ease;
-          font-size: 13px;
-        }
-
-        .search-input:focus {
-          outline: none;
-          background: #ffffff;
-          box-shadow: 0 0 0 3px rgba(64, 124, 124, 0.2);
-        }
-
-        .suggestions-dropdown {
-          position: absolute;
-          width: 100%;
-          background: white;
-          border-radius: 0 0 10px 10px;
-          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-          z-index: 1000;
-        }
-
-        .suggestion-item {
-          padding: 10px 15px;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .suggestion-item:hover {
-          background-color: #f1f0f6;
-          color: #407c7c;
-        }
-
-        li::marker {
-          content: none;
-        }
-
-        /* نافذة السلة والمفضلة */
-
-        /* تعديلات للجوال */
-        @media (max-width: 991px) {
-          /* إخفاء اللوجو عند التمرير */
-          .navbar-brand.logo-hidden {
-            opacity: 0;
-            transform: scale(0.8);
-            transition: all 0.3s ease;
-            pointer-events: none;
-            height: 0;
-            overflow: hidden;
-          }
-          
-          /* إخفاء الهامبرغر مينو الأصلي عند التمرير */
-          .navbar-toggler.hamburger-hidden {
-            opacity: 0;
-            transform: scale(0.8);
-            transition: all 0.3s;
-            pointer-events: none;
-            height: 0;
-            overflow: hidden;
-          }
-          
-          /* تقليل ارتفاع النافبار عند التمرير */
-          .navbar.navbar-scrolled {
-            min-height: auto;
-            padding: 0.25rem 0;
-            margin: 25px;
-            transition: all 0.3s;
-            background-color: transparent;
-          }
-          .navbar.navbar-scrolled .container {
-            padding: 0;
-            transition: all 0.3s;
-          }
-
-          .navbar-mobile {
-            display: flex !important;
-            flex-direction: row;
-            width: 100%;
-            margin: 0;
-            padding: 0 0px;
-            align-items: center;
-            justify-content: space-between;
-            background-color: var(--nav-color);
-            transition: all 0.3s ease;
-          }
-
-          .navbar-mobile.scrolled {
-            padding: 5px 0;
-            margin-top: -60px;
-          }
-
-          .navbar-mobile ul{
-            padding: 0 20px;
-            transition: all 0.3s ease;
-          }
-
-          /* البحث في الحالة العادية */
-          .mobile-search-container.full-width {
-            flex: 1;
-            margin-right: 15px;
-            margin-left: 15px;
-          }
-
-          /* البحث عند التمرير */
-          .mobile-search-container.scrolled {
-            flex: 0 0 60%;
-            margin-right: 10px;
-            margin-left: 5px;
-          }
-
-    /* البحث في الحالة العادية */
-    .mobile-search-container.full-width {
-      flex: 1;
-      margin-right: 15px;
-      margin-left: 15px;
-    }
-
-    /* البحث عند التمرير */
-    .mobile-search-container.scrolled {
-      flex: 0 0 60%;
-      margin-right: 10px;
-      margin-left: 5px;
-    }
-
-    .navbar-mobile-search {
-      position: relative;
-      transition: all 0.3s ease;
-    }
-
-    /* أيقونة المستخدم في الحالة العادية */
-    .user-icon-normal {
-      opacity: 1;
-      transform: scale(1);
-      transition: all 0.4s ease;
-    }
-    
-    /* الهامبرغر مينو الجديد عند التمرير */
-    .mobile-hamburger-menu-scrolled {
-      opacity: 1;
-      transform: scale(1);
-      transition: all 0.4s ease;
-      animation: slideInSmooth 0.4s ease;
-    }
-    
-    .mobile-hamburger-menu-scrolled .navbar-toggler {
-      border: none;
-      background: none;
-      padding: 8px;
-      transition: all 0.3s ease;
-    }
-    
-    .mobile-hamburger-menu-scrolled .navbar-toggler:focus {
-      box-shadow: none;
-    }
-    
-    .mobile-hamburger-menu-scrolled .navbar-toggler:hover {
-      transform: scale(1.1);
-    }
-    
-    /* انيميشن سلس للظهور */
-    @keyframes slideInSmooth {
-      0% {
-        opacity: 0;
-        transform: translateX(-20px) scale(0.8);
-      }
-      100% {
-        opacity: 1;
-        transform: translateX(0) scale(1);
-      }
-    }
-  }
-  /* ستايل خاص لقائمة الموبايل الجديدة */
-  .dropdown-menu-mobile.p-3 {
-    min-width: 60vw;
-    max-width: 65vw;
-    margin-left: -15px;
-    padding: 10px 8px;
-    border-radius: 14px;
-    background: #fff;
-    box-shadow: 0 8px 32px rgba(64, 124, 124, 0.13);
-  }
-  .dropdown-menu-mobile.p-3 h4 {
-    font-size: 1.1rem;
-  }
-  .dropdown-menu-mobile.p-3 .list-group-item {
-    font-size: 1rem;
-    padding: 10px 6px;
-  }
-  .dropdown-menu-mobile.p-3 .btn {
-    font-size: 0.95rem;
-    padding: 0.3rem 0.7rem;
-    border-radius: 10px;
-  }
-  .dropdown-menu-mobile.p-3 .badge {
-    font-size: 0.9rem;
-  }
-  .dropdown-menu-mobile.p-3 strong,
-  .dropdown-menu-mobile.p-3 b {
-    font-size: 1rem;
-  }
-          padding: 10px 8px;
-          border-radius: 14px;
-          background: #fff;
-          box-shadow: 0 8px 32px rgba(64, 124, 124, 0.13);
-        }
-        .dropdown-menu-mobile.p-3 h4 {
-          font-size: 1.1rem;
-        }
-        .dropdown-menu-mobile.p-3 .list-group-item {
-          font-size: 1rem;
-          padding: 10px 6px;
-        }
-        .dropdown-menu-mobile.p-3 .btn {
-          font-size: 0.95rem;
-          padding: 0.3rem 0.7rem;
-          border-radius: 10px;
-        }
-        .dropdown-menu-mobile.p-3 .badge {
-          font-size: 0.9rem;
-        }
-        .dropdown-menu-mobile.p-3 strong,
-        .dropdown-menu-mobile.p-3 b {
-          font-size: 1rem;
-        }
-
-        @media (max-width: 600px) {
-          .dropdown-menu-mobile.p-3 {
-            min-width: 90vw;
-            max-width: 85vw;
-            padding: 6px 2px;
-          }
-          .dropdown-menu-mobile.p-3 h4 {
-            font-size: 0.95rem;
-          }
-          .dropdown-menu-mobile.p-3 .list-group-item {
-            font-size: 0.85rem;
-            padding: 6px 2px;
-          }
-          .dropdown-menu-mobile.p-3 .btn {
-            font-size: 0.8rem;
-            padding: 0.75rem 0.3rem;
-            border-radius: 7px;
-          }
-          .dropdown-menu-mobile.p-3 .badge {
-            font-size: 0.7rem;
-          }
-          .dropdown-menu-mobile.p-3 strong,
-          .dropdown-menu-mobile.p-3 b {
-            font-size: 0.85rem;
-          }
-        }
-
-      `}</style>
 
       {/* مودال تأكيد تسجيل الخروج */}
       <Modal

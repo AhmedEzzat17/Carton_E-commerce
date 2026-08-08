@@ -20,13 +20,21 @@ export default function CategoryProductsPage() {
   } = useContext(CartWishlistContext);
 
   useEffect(() => {
+    if (category) {
+      document.title = category.name;
+    } else {
+      document.title = "منتجات القسم";
+    }
+  }, [category]);
+
+  useEffect(() => {
     categoryService
       .getById(id)
       .then((res) => {
         if (res.data?.status && Array.isArray(res.data.data?.products?.data)) {
           setCategory(res.data.data.category);
           const sorted = res.data.data.products.data.sort(
-            (a, b) => new Date(b.created_at) - new Date(a.created_at)
+            (a, b) => new Date(b.created_at) - new Date(a.created_at),
           );
           setProducts(sorted);
         }
@@ -64,7 +72,7 @@ export default function CategoryProductsPage() {
         {products.map((product) => {
           const inCart = cartItems.some((item) => item.id === product.id);
           const inWishlist = wishlistItems.some(
-            (item) => item.id === product.id
+            (item) => item.id === product.id,
           );
           let imgSrc = fallbackImage;
           if (product.productimages?.[0]?.url) {
@@ -86,7 +94,9 @@ export default function CategoryProductsPage() {
                     <img
                       src={imgSrc}
                       alt={product.name}
-                      onClick={() => window.scrollTo(0, 0)}
+                      onClick={() =>
+                        window.scrollTo({ top: 0, behavior: "smooth" })
+                      }
                     />
                   </Link>
 
@@ -120,13 +130,13 @@ export default function CategoryProductsPage() {
                     >
                       <i className="far fa-heart"></i>
                     </button>
-                    <button
+                    {/* <button
                       type="button"
                       className="icon-btn"
                       title="Quick View"
                     >
                       <i className="fas fa-eye"></i>
-                    </button>
+                    </button> */}
                   </div>
                 </div>
 

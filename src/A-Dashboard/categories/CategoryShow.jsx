@@ -10,6 +10,7 @@ const CategoryShow = () => {
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("");
 
   const BASE_IMAGE_URL = "https://myappapi.fikriti.com/";
 
@@ -33,16 +34,39 @@ const CategoryShow = () => {
     fetchCategories(1, search);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("هل أنت متأكد من حذف هذا القسم؟")) return;
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+
+  const handleDeleteClick = (id) => {
+    setDeleteId(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
     try {
-      await CategoryService.delete(id);
+      await CategoryService.delete(deleteId);
       setMessage("تم حذف القسم بنجاح");
-      setTimeout(() => setMessage(""), 3000);
+      setMessageType("success");
+      setTimeout(() => {
+        setMessage("");
+        setMessageType("");
+      }, 3000);
       fetchCategories(page, search);
     } catch (err) {
-      console.error(err);
+      setMessage("حدث خطأ أثناء الحذف");
+      setMessageType("error");
+      setTimeout(() => {
+        setMessage("");
+        setMessageType("");
+      }, 3000);
     }
+    setShowDeleteModal(false);
+    setDeleteId(null);
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setDeleteId(null);
   };
 
   const printTable = () => {
@@ -73,13 +97,30 @@ const CategoryShow = () => {
 
   return (
     <div className="container mt-4" dir="rtl">
+      {/* رسالة النجاح/الخطأ فوق الشاشة */}
+      {message && (
+        <div
+          className={`alert text-center ${messageType === "error" ? "alert-danger" : "alert-success"}`}
+          style={{
+            position: "fixed",
+            top: "20px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 9999,
+            minWidth: "300px",
+            maxWidth: "500px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+          }}
+        >
+          {message}
+        </div>
+      )}
+      
       <div className="row justify-content-center">
-        <h1 className="text-center mb-4 fw-bold text-primary">إدارة الأصناف</h1>
+        <h1 className="text-center mb-4 fw-bold" style={{ color: "var(--primary-color)" }}>إدارة الأصناف</h1>
         <div className="col-md-12">
-          {message && <div className="alert alert-success text-center">{message}</div>}
-
           <div className="card shadow-lg border-0">
-            <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <div className="card-header text-white d-flex justify-content-between align-items-center" style={{ backgroundColor: "var(--primary-color)" }}>
               <h4 className="mb-0">قائمة الأصناف</h4>
               <Link to="/Dashboard/categories/create" className="btn btn-light btn-sm text-dark">
                 إضافة صنف
@@ -88,7 +129,7 @@ const CategoryShow = () => {
 
             <div className="card-body bg-light">
               <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-2">
-                <button onClick={printTable} className="btn btn-outline-dark btn-sm shadow-sm">
+                <button onClick={printTable} className="btn btn-outline-light text-dark btn-sm shadow-sm">
                   <i className="bi bi-printer"></i> طباعة
                 </button>
                 <form className="d-flex w-100" onSubmit={handleSearchSubmit}>
@@ -99,7 +140,7 @@ const CategoryShow = () => {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
-                  <button type="submit" className="btn btn-primary">بحث</button>
+                  <button type="submit" className="btn" style={{ backgroundColor: "var(--primary-color)", color: "white" }}>بحث</button>
                 </form>
               </div>
 
@@ -142,14 +183,15 @@ const CategoryShow = () => {
                           <td>
                             <Link
                               to={`/Dashboard/categories/edit/${cat.id}`}
-                              className="btn btn-sm btn-primary"
+                              className="btn btn-sm"
+                              style={{ backgroundColor: "var(--primary-color)", color: "#fff" }}
                             >
                               تعديل
                             </Link>
                           </td>
                           <td>
                             <button
-                              onClick={() => handleDelete(cat.id)}
+                              onClick={() => handleDeleteClick(cat.id)}
                               className="btn btn-sm btn-danger"
                             >
                               حذف
@@ -173,7 +215,7 @@ const CategoryShow = () => {
                 <ul className="pagination justify-content-center flex-wrap gap-2 text-center">
                   {Array.from({ length: lastPage }, (_, i) => i + 1).map((p) => (
                     <li key={p} className={`page-item ${p === page ? "active" : ""}`}>
-                      <button className="page-link" onClick={() => setPage(p)}>
+                      <button className="page-link" onClick={() => setPage(p)} style={{ background: "var(--primary-color)" }}>
                         {p}
                       </button>
                     </li>
@@ -184,6 +226,47 @@ const CategoryShow = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="modal show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content" dir="rtl">
+              <div className="modal-header" style={{ backgroundColor: "#dc3545", color: "white" }}>
+                <h5 className="modal-title">
+                  <i className="bi bi-exclamation-triangle me-2"></i>
+                  تأكيد الحذف
+                </h5>
+              </div>
+              <div className="modal-body text-center py-4">
+                <div className="mb-3">
+                  <i className="bi bi-trash3 text-danger" style={{ fontSize: "3rem" }}></i>
+                </div>
+                <h6 className="mb-3">هل أنت متأكد من حذف هذا القسم؟</h6>
+                <p className="text-muted">لا يمكن التراجع عن هذا الإجراء</p>
+              </div>
+              <div className="modal-footer justify-content-center">
+                <button
+                  type="button"
+                  className="btn btn-secondary me-2"
+                  onClick={cancelDelete}
+                >
+                  <i className="bi bi-x-circle me-1"></i>
+                  إلغاء
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={confirmDelete}
+                >
+                  <i className="bi bi-trash3 me-1"></i>
+                  حذف
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
